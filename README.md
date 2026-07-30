@@ -1,4 +1,4 @@
-# Scientia — Hub de Produção Científica do BCC/UFAPE
+# Scientia - Hub de Produção Científica do BCC/UFAPE
 
 ## Integrantes
 [Lucas Feitoza](https://github.com/hazdriel) | [Carlos Gabyrel Espianhara](https://github.com/cgabryel0) | [Laura Vitória Mendes](https://github.com/l4uramendes)
