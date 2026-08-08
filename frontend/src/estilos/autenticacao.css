@@ -1,0 +1,40 @@
+.tela-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(160deg, var(--primaria) 0%, var(--primaria-escura) 45%, #0d264b 100%);
+}
+
+.cartao-auth {
+  width: 100%;
+  max-width: 26rem;
+  padding: 2.25rem;
+  background-color: var(--superficie);
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(9, 22, 45, 0.28);
+}
+
+.cartao-auth__titulo {
+  font-size: 1.5rem;
+}
+
+.cartao-auth__subtitulo {
+  margin: 0.4rem 0 1.75rem;
+  color: var(--texto-suave);
+  font-size: 0.925rem;
+}
+
+.cartao-auth__rodape {
+  margin: 1.25rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 480px) {
+  .cartao-auth {
+    padding: 1.5rem;
+  }
+}
