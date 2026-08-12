@@ -1,0 +1,90 @@
+.cartao-producao {
+  max-width: 34rem;
+  padding: 1.75rem;
+  background-color: var(--superficie);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.campo textarea {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background-color: var(--superficie);
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.campo textarea:focus {
+  outline: none;
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px rgba(31, 75, 142, 0.15);
+}
+
+.campo__erro {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--erro);
+}
+
+.entrada-chips {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.entrada-chips input {
+  flex: 1;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background-color: var(--superficie);
+  font: inherit;
+  color: inherit;
+}
+
+.entrada-chips input:focus {
+  outline: none;
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px rgba(31, 75, 142, 0.15);
+}
+
+.lista-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+  background-color: rgba(31, 75, 142, 0.1);
+  color: var(--primaria);
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.chip__remover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip__remover:hover {
+  background-color: rgba(31, 75, 142, 0.2);
+}
