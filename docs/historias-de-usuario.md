@@ -174,6 +174,7 @@ entrou na iteração anterior a esta história; a consulta abaixo completa o cic
    resumo, palavras-chave e o link de acesso.
 3. É possível filtrar por texto (casando com título, autores ou palavras-chave, sem
    diferenciar maiúsculas), por tipo de trabalho e por ano — isolados ou combinados.
+   A API aceita ainda filtros separados por título, autor e palavra-chave.
 4. Os filtros são aplicados no backend, via query string do `GET /api/producoes`.
 5. Um tipo de trabalho ou ano inválido na query é recusado com erro 400 e mensagem
    explicando o problema.
@@ -184,11 +185,10 @@ entrou na iteração anterior a esta história; a consulta abaixo completa o cic
 
 ### Tarefas
 
-- [x] Criar o service de consulta com os filtros e a ordenação
-- [x] Criar o controller de consulta lendo os filtros da query string
+- [x] Estender o service de consulta com a busca unificada, a validação dos filtros
+      e a ordenação por ano
+- [x] Repassar o filtro de busca no controller de consulta
 - [x] Expor o `GET /api/producoes` nas rotas de produção
-- [x] Montar as rotas de produção no `app.js` (ligando também o `POST` do cadastro)
-- [x] Criar o serviço de consulta no React montando a query string
 - [x] Criar a tela do acervo com busca, filtros e os cards das produções
 - [x] Registrar as rotas `/producoes` e `/producoes/cadastro` no roteamento
 - [x] Adicionar o link "Produções" no cabeçalho

@@ -1,10 +1,20 @@
-import { listaDeProducoesResposta } from '../dto/producaoDTO.js';
 import * as producaoConsultaService from '../services/producaoConsultaService.js';
 
-export function listar(req, res) {
-  const { busca, tipoTrabalho, anoPublicacao } = req.query;
+export const listar = async (req, res, next) => {
+  try {
+    const filtros = {
+      busca: req.query.busca,
+      titulo: req.query.titulo,
+      autor: req.query.autor,
+      tipoTrabalho: req.query.tipoTrabalho,
+      palavraChave: req.query.palavraChave,
+      anoPublicacao: req.query.anoPublicacao
+    };
 
-  const producoes = producaoConsultaService.listar({ busca, tipoTrabalho, anoPublicacao });
-
-  res.json({ producoes: listaDeProducoesResposta(producoes) });
-}
+    const producoes = await producaoConsultaService.listar(filtros);
+    // Envolvemos a resposta em um objeto contendo a chave producoes
+    res.status(200).json({ producoes });
+  } catch (erro) {
+    next(erro);
+  }
+};
