@@ -151,3 +151,45 @@ foi assim que implementamos. Vale registrar que, em um sistema em produção, de
 qualquer pessoa se cadastrar como `ADMIN` não seria aceitável: o normal é todo
 cadastro público virar `USER` e a promoção para `ADMIN` ser feita por quem já é
 administrador. Fica anotado como ponto a rever em uma próxima iteração.
+
+---
+
+# Histórias de Usuário - Terceira Iteração
+
+Iteração dedicada ao acervo, o propósito central do Scientia: registrar as produções
+científicas do curso e permitir que a comunidade as consulte. O cadastro de produções
+entrou na iteração anterior a esta história; a consulta abaixo completa o ciclo.
+
+## História 4 - Consulta de produções
+
+> **Sendo** um usuário autenticado no sistema
+> **Eu quero** consultar as produções científicas cadastradas, podendo filtrá-las
+> **Para que** eu possa explorar o acervo do curso e encontrar trabalhos do meu interesse.
+
+### Critérios de aceitação
+
+1. Qualquer usuário autenticado (`USER` ou `ADMIN`) acessa a tela de consulta; sem
+   sessão, o guard leva para o login.
+2. A listagem mostra, para cada produção: título, tipo de trabalho, ano, autores,
+   resumo, palavras-chave e o link de acesso.
+3. É possível filtrar por texto (casando com título, autores ou palavras-chave, sem
+   diferenciar maiúsculas), por tipo de trabalho e por ano — isolados ou combinados.
+   A API aceita ainda filtros separados por título, autor e palavra-chave.
+4. Os filtros são aplicados no backend, via query string do `GET /api/producoes`.
+5. Um tipo de trabalho ou ano inválido na query é recusado com erro 400 e mensagem
+   explicando o problema.
+6. As produções vêm ordenadas da mais recente para a mais antiga (ano de publicação;
+   dentro do mesmo ano, o cadastro mais novo primeiro).
+7. Acervo vazio e filtro sem resultados mostram mensagens distintas; no acervo vazio
+   há um convite para cadastrar a primeira produção.
+
+### Tarefas
+
+- [x] Estender o service de consulta com a busca unificada, a validação dos filtros
+      e a ordenação por ano
+- [x] Repassar o filtro de busca no controller de consulta
+- [x] Expor o `GET /api/producoes` nas rotas de produção
+- [x] Criar a tela do acervo com busca, filtros e os cards das produções
+- [x] Registrar as rotas `/producoes` e `/producoes/cadastro` no roteamento
+- [x] Adicionar o link "Produções" no cabeçalho
+- [x] Estilizar a barra de filtros e os cards no CSS (e importar o `producoes.css`)
