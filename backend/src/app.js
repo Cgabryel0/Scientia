@@ -5,6 +5,7 @@ import { ORIGEM_FRONTEND } from './config/ambiente.js';
 import { autenticacao } from './middlewares/autenticacao.js';
 import { rotaNaoEncontrada, tratadorDeErros } from './middlewares/erros.js';
 import authRoutes from './routes/authRoutes.js';
+import producaoRoutes from './routes/producaoRoutes.js';
 import usuarioRoutes from './routes/usuarioRoutes.js';
 
 export function criarApp() {
@@ -19,6 +20,7 @@ export function criarApp() {
 
   app.get('/api/status', (req, res) => res.json({ status: 'no ar' }));
   app.use('/api/auth', authRoutes);
+  app.use('/api/producoes', producaoRoutes);
   app.use('/api/usuarios', usuarioRoutes);
 
   app.use(rotaNaoEncontrada);

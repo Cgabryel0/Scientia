@@ -38,8 +38,8 @@ export function Painel() {
             </p>
           ) : (
             <p>
-              Seu perfil consulta o acervo do curso. As telas de administração ficam
-              disponíveis apenas para contas com o papel ADMIN.
+              Seu perfil consulta o <Link to="/producoes">acervo do curso</Link>. As telas
+              de administração ficam disponíveis apenas para contas com o papel ADMIN.
             </p>
           )}
         </article>

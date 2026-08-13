@@ -23,6 +23,7 @@ export function Cabecalho() {
 
       <nav className="cabecalho__menu">
         <NavLink to="/painel">Painel</NavLink>
+        <NavLink to="/producoes">Produções</NavLink>
         {/* O link só aparece para o ADMIN, mas quem barra o acesso de verdade
             é o guard da rota e o backend. */}
         {usuario.role === 'ADMIN' && <NavLink to="/usuarios">Usuários</NavLink>}
