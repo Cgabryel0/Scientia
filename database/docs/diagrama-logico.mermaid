@@ -1,0 +1,122 @@
+erDiagram
+    CURSO ||--o{ ALUNO : possui
+    CONTA ||--o| ALUNO : autentica
+    CONTA |o--o| PESQUISADOR : autentica
+    ALUNO ||--o{ CANDIDATURA : realiza
+    VAGA ||--o{ CANDIDATURA : recebe
+    AGENCIA_FOMENTO ||--o{ EDITAL : lanca
+    EDITAL |o--o{ PROJETO_PESQUISA : financia
+    GRUPO_PESQUISA ||--o{ PROJETO_PESQUISA : gera
+    PROJETO_PESQUISA ||--o{ VAGA : abre
+    PROJETO_PESQUISA ||--o{ PUBLICACAO : gera
+    PESQUISADOR ||--o{ PARTICIPACAO : participa
+    PROJETO_PESQUISA ||--o{ PARTICIPACAO : possui
+    PESQUISADOR ||--o{ MEMBRO : integra
+    GRUPO_PESQUISA ||--o{ MEMBRO : abriga
+    PESQUISADOR ||--o{ AUTORIA : possui
+    PUBLICACAO ||--o{ AUTORIA : possui
+    PROJETO_PESQUISA ||--o{ POSSUI_AREA : possui
+    AREA_CONHECIMENTO ||--o{ POSSUI_AREA : classifica
+
+    CURSO {
+        SERIAL id_curso PK
+        VARCHAR nome_curso UK
+    }
+    CONTA {
+        SERIAL id_conta PK
+        VARCHAR email UK
+        VARCHAR senha_hash
+        VARCHAR tipo
+        TIMESTAMP data_criacao
+    }
+    ALUNO {
+        SERIAL id_aluno PK
+        INT id_conta FK
+        INT id_curso FK
+        VARCHAR nome
+        VARCHAR matricula UK
+    }
+    PESQUISADOR {
+        SERIAL id_pesquisador PK
+        INT id_conta FK
+        VARCHAR nome
+        VARCHAR numero_lattes UK
+        VARCHAR email
+        VARCHAR vinculo
+        VARCHAR origem
+    }
+    AGENCIA_FOMENTO {
+        SERIAL id_agencia PK
+        VARCHAR nome UK
+    }
+    EDITAL {
+        SERIAL id_edital PK
+        INT id_agencia FK
+        VARCHAR nome_edital
+        INT ano
+    }
+    GRUPO_PESQUISA {
+        SERIAL id_grupo PK
+        VARCHAR nome_grupo UK
+        VARCHAR link_dgp
+        INT ano_criacao
+    }
+    PROJETO_PESQUISA {
+        SERIAL id_projeto PK
+        INT id_grupo FK
+        INT id_edital FK
+        VARCHAR titulo
+        TEXT resumo
+        DATE data_inicio
+        DATE data_fim
+        VARCHAR status
+        VARCHAR origem
+    }
+    PUBLICACAO {
+        SERIAL id_publicacao PK
+        INT id_projeto FK
+        VARCHAR tipo
+        INT ano
+        VARCHAR doi UK
+        VARCHAR veiculo
+        VARCHAR titulo
+    }
+    AREA_CONHECIMENTO {
+        SERIAL id_area PK
+        VARCHAR nome_area UK
+    }
+    VAGA {
+        SERIAL id_vaga PK
+        INT id_projeto FK
+        VARCHAR titulo
+        TEXT requisitos
+        VARCHAR status
+        INT qtd_vagas
+        DATE data_abertura
+    }
+    AUTORIA {
+        INT id_pesquisador PK
+        INT id_publicacao PK
+        INT ordem
+    }
+    PARTICIPACAO {
+        INT id_pesquisador PK
+        INT id_projeto PK
+        DATE data_entrada
+        VARCHAR papel
+    }
+    MEMBRO {
+        INT id_pesquisador PK
+        INT id_grupo PK
+        VARCHAR papel_grupo
+    }
+    POSSUI_AREA {
+        INT id_projeto PK
+        INT id_area PK
+    }
+    CANDIDATURA {
+        INT id_aluno PK
+        INT id_vaga PK
+        VARCHAR status
+        DATE data_candidatura
+    }
