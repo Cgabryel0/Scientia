@@ -37,7 +37,7 @@ export function Login() {
       <form className="cartao-auth" onSubmit={enviar}>
         <h1 className="cartao-auth__titulo">Entrar no Scientia</h1>
         <p className="cartao-auth__subtitulo">
-          Acesse com sua conta para consultar a produção científica do curso.
+          Acesse com sua conta para usar as áreas restritas do hub.
         </p>
 
         {erro && <p className="alerta alerta--erro">{erro}</p>}
@@ -72,6 +72,10 @@ export function Login() {
 
         <p className="cartao-auth__rodape">
           Ainda não tem conta? <Link to="/cadastro">Cadastre-se</Link>
+        </p>
+
+        <p className="cartao-auth__rodape">
+          Só quer consultar? <Link to="/publicacoes">Veja o acervo</Link>
         </p>
       </form>
     </div>

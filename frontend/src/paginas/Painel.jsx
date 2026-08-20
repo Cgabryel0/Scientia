@@ -38,7 +38,7 @@ export function Painel() {
             </p>
           ) : (
             <p>
-              Seu perfil consulta o <Link to="/producoes">acervo do curso</Link>. As telas
+              Seu perfil consulta o <Link to="/publicacoes">acervo do curso</Link>. As telas
               de administração ficam disponíveis apenas para contas do tipo admin.
             </p>
           )}

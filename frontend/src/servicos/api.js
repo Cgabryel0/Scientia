@@ -27,3 +27,17 @@ export async function requisitar(caminho, { metodo = 'GET', corpo, token } = {})
 
   return dados;
 }
+
+export function montarConsulta(filtros = {}) {
+  const parametros = new URLSearchParams();
+
+  Object.entries(filtros).forEach(([chave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') {
+      parametros.append(chave, valor);
+    }
+  });
+
+  const consulta = parametros.toString();
+
+  return consulta ? `?${consulta}` : '';
+}

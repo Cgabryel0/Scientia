@@ -1,0 +1,150 @@
+.lista-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  background-color: rgba(31, 75, 142, 0.1);
+  color: var(--primaria);
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+/* Consulta do acervo */
+.pagina__cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.botao--compacto {
+  width: auto;
+}
+
+.filtros-acervo {
+  display: grid;
+  grid-template-columns: minmax(12rem, 2fr) minmax(9rem, 1fr) minmax(7rem, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.75rem;
+}
+
+.filtros-acervo--duplo {
+  grid-template-columns: minmax(12rem, 2fr) minmax(9rem, 1fr) auto;
+}
+
+.filtros-acervo--simples {
+  grid-template-columns: minmax(12rem, 3fr) auto;
+}
+
+.filtros-acervo .campo {
+  margin-bottom: 0;
+}
+
+.filtros-acervo .botao--discreto {
+  padding: 0.7rem 0.9rem;
+}
+
+.lista-acervo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cartao-acervo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cartao-acervo h2,
+.cartao-acervo h3 {
+  margin-bottom: 0;
+}
+
+.cartao-acervo__topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cartao-acervo__ano {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.cartao-acervo__titulo {
+  font-size: 1.05rem;
+}
+
+.cartao-acervo__autores {
+  font-size: 0.9rem;
+}
+
+.cartao-acervo__veiculo {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+.cartao-acervo__vinculo {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+/* Os chips e o link do DOI ficam rentes ao rodapé do card, alinhando os
+   cards vizinhos pela mesma linha de base. */
+.cartao-acervo .lista-chips {
+  margin-top: auto;
+}
+
+.cartao-acervo__link {
+  margin-top: auto;
+  font-weight: 600;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.etiqueta--tipo {
+  background-color: rgba(31, 75, 142, 0.12);
+  color: var(--primaria);
+}
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.paginacao__posicao {
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 640px) {
+  .filtros-acervo,
+  .filtros-acervo--duplo,
+  .filtros-acervo--simples {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}

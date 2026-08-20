@@ -7,7 +7,8 @@ import { AuthProvider } from './contexto/AuthContext.jsx';
 import './estilos/global.css';
 import './estilos/autenticacao.css';
 import './estilos/painel.css';
-import './estilos/producoes.css';
+import './estilos/publicacoes.css';
+import './estilos/projetos.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

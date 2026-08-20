@@ -1,0 +1,76 @@
+export const RESPOSTA_PUBLICACOES = {
+  publicacoes: [
+    {
+      id: 1,
+      titulo: 'Análise de desempenho de algoritmos de aprendizado',
+      tipo: 'artigo',
+      ano: 2024,
+      doi: '10.1000/exemplo.1',
+      veiculo: 'Revista Brasileira de Computação',
+      projeto: { id: 3, titulo: 'Inteligência artificial aplicada ao Agreste' },
+      autores: [
+        { id: 91, nome: 'Ana Souza', ordem: 1 },
+        { id: 104, nome: 'Bruno Lima', ordem: 2 },
+      ],
+    },
+  ],
+  paginacao: { pagina: 1, porPagina: 20, total: 200 },
+};
+
+export const RESPOSTA_PROJETOS = {
+  projetos: [
+    {
+      id: 3,
+      titulo: 'Inteligência artificial aplicada ao Agreste',
+      status: 'em_andamento',
+      dataInicio: '2024-03-01',
+      dataFim: null,
+      grupo: { id: 2, nome: 'Grupo de Pesquisa em Computação Aplicada' },
+      areas: [{ id: 1, nome: 'Ciência da Computação' }],
+      totalPublicacoes: 4,
+    },
+  ],
+  paginacao: { pagina: 1, porPagina: 20, total: 120 },
+};
+
+export const RESPOSTA_PROJETO = {
+  projeto: {
+    id: 3,
+    titulo: 'Inteligência artificial aplicada ao Agreste',
+    resumo: 'Estuda a aplicação de aprendizado de máquina...',
+    status: 'em_andamento',
+    dataInicio: '2024-03-01',
+    dataFim: null,
+    origem: 'manual',
+    grupo: { id: 2, nome: 'Grupo de Pesquisa em Computação Aplicada' },
+    edital: { id: 7, nome: 'Edital Universal nº 03/2022', ano: 2022 },
+    areas: [{ id: 1, nome: 'Ciência da Computação' }],
+    equipe: [{ id: 91, nome: 'Ana Souza', papel: 'coordenador', dataEntrada: '2024-03-01' }],
+    publicacoes: [{ id: 1, titulo: 'Análise de desempenho...', tipo: 'artigo', ano: 2024 }],
+  },
+};
+
+export const RESPOSTA_GRUPOS = {
+  grupos: [
+    {
+      id: 2,
+      nome: 'Grupo de Pesquisa em Computação Aplicada',
+      linkDgp: 'http://dgp.cnpq.br/exemplo',
+      anoCriacao: 2015,
+      totalProjetos: 6,
+      totalMembros: 5,
+    },
+  ],
+  paginacao: { pagina: 1, porPagina: 20, total: 30 },
+};
+
+export const RESPOSTA_GRUPO = {
+  grupo: {
+    id: 2,
+    nome: 'Grupo de Pesquisa em Computação Aplicada',
+    linkDgp: null,
+    anoCriacao: 2015,
+    membros: [{ id: 91, nome: 'Ana Souza', papel: 'lider' }],
+    projetos: [{ id: 3, titulo: 'Inteligência artificial aplicada ao Agreste', status: 'em_andamento' }],
+  },
+};
