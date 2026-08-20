@@ -149,8 +149,9 @@ database/
     01-schema.sql
     02-seed.sql
   docs/
-    diagrama-logico.mermaid
     diagrama-logico-uml.png
+    diagrama-logico.mermaid
+    dicionario-de-dados.pdf
 ```
 
 ## Diagrama Lógico
@@ -168,7 +169,6 @@ erDiagram
     CONTA |o--o| PESQUISADOR : autentica
     ALUNO ||--o{ CANDIDATURA : realiza
     VAGA ||--o{ CANDIDATURA : recebe
-    AGENCIA_FOMENTO ||--o{ EDITAL : lanca
     EDITAL |o--o{ PROJETO_PESQUISA : financia
     GRUPO_PESQUISA ||--o{ PROJETO_PESQUISA : gera
     PROJETO_PESQUISA ||--o{ VAGA : abre
@@ -209,13 +209,8 @@ erDiagram
         VARCHAR vinculo
         VARCHAR origem
     }
-    AGENCIA_FOMENTO {
-        SERIAL id_agencia PK
-        VARCHAR nome UK
-    }
     EDITAL {
         SERIAL id_edital PK
-        INT id_agencia FK
         VARCHAR nome_edital
         INT ano
     }
@@ -293,20 +288,19 @@ O esquema está na 3FN.
 * **1FN** - todos os atributos são atômicos e não há grupo repetitivo.
 * **2FN** - as tabelas de chave composta (`membro`, `participacao`, `possui_area`,
   `autoria`, `candidatura`) só guardam atributos que dependem da chave inteira.
-* **3FN** - não há dependência transitiva. O órgão de fomento virou a tabela
-  `agencia_fomento` em vez de ficar repetido como texto em cada edital. E quem
-  coordena um projeto é o `papel` da `participacao`, não um campo do projeto, então
-  não tem como dois lugares discordarem.
+* **3FN** - não há dependência transitiva. Quem coordena um projeto é o `papel`
+  da `participacao`, não um campo do projeto, então não tem como dois lugares
+  discordarem.
 
 Os N:N do conceitual viraram tabelas de junção, com chave primária composta pelas
 duas chaves estrangeiras.
 
 ## Povoamento
 
-O `02-seed.sql` roda junto com o schema e insere 2.538 tuplas.
+O `02-seed.sql` roda junto com o schema e insere 2.522 tuplas.
 
-As tabelas menores foram escritas à mão, com dados reais: os cursos da UFAPE, as
-áreas do CNPq e as agências de fomento. O resto é gerado com `generate_series`
+As tabelas menores foram escritas à mão, com dados reais: os cursos da UFAPE e as
+áreas do CNPq. O resto é gerado com `generate_series`
 combinando vetores de nomes, sobrenomes, temas de pesquisa e recortes geográficos
 do Agreste.
 
@@ -342,13 +336,9 @@ script ela é apagada e as sequências dos `SERIAL` são acertadas com `setval`.
 | `membro` | principal | 165 |
 | `area_conhecimento` | secundária | 24 |
 | `curso` | secundária | 18 |
-| `agencia_fomento` | secundária | 16 |
 
 ## Dicionário de Dados
 
 A descrição de cada tabela e de cada atributo, com tipo, restrições e o significado
 dos códigos guardados em campos como `status`, `origem` e `papel`, está em
 [database/docs/dicionario-de-dados.pdf](database/docs/dicionario-de-dados.pdf).
-
-O mesmo conteúdo em markdown, que é o que geramos o PDF a partir de, está em
-[database/docs/dicionario-de-dados.md](database/docs/dicionario-de-dados.md).

@@ -44,20 +44,11 @@ CREATE TABLE pesquisador (
         REFERENCES conta (id_conta) ON DELETE SET NULL
 );
 
-CREATE TABLE agencia_fomento (
-    id_agencia  SERIAL       PRIMARY KEY,
-    nome        VARCHAR(150) NOT NULL,
-    CONSTRAINT uq_agencia_nome UNIQUE (nome)
-);
-
 CREATE TABLE edital (
     id_edital    SERIAL       PRIMARY KEY,
-    id_agencia   INT          NOT NULL,
     nome_edital  VARCHAR(150) NOT NULL,
     ano          INT          NOT NULL,
-    CONSTRAINT ck_edital_ano CHECK (ano BETWEEN 1990 AND 2100),
-    CONSTRAINT fk_edital_agencia FOREIGN KEY (id_agencia)
-        REFERENCES agencia_fomento (id_agencia) ON DELETE RESTRICT
+    CONSTRAINT ck_edital_ano CHECK (ano BETWEEN 1990 AND 2100)
 );
 
 CREATE TABLE grupo_pesquisa (
@@ -185,7 +176,6 @@ CREATE TABLE candidatura (
 );
 
 CREATE INDEX idx_aluno_curso ON aluno (id_curso);
-CREATE INDEX idx_edital_agencia ON edital (id_agencia);
 CREATE INDEX idx_projeto_grupo ON projeto_pesquisa (id_grupo);
 CREATE INDEX idx_projeto_edital ON projeto_pesquisa (id_edital);
 CREATE INDEX idx_projeto_status ON projeto_pesquisa (status);
