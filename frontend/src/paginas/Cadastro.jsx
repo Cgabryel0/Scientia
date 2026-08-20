@@ -1,17 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../contexto/AuthContext.jsx';
+import * as cursoService from '../servicos/cursoService.js';
 
-const DADOS_INICIAIS = { nome: '', email: '', senha: '', role: 'USER' };
+const VINCULOS = [
+  { valor: 'docente', rotulo: 'Docente' },
+  { valor: 'discente', rotulo: 'Discente' },
+  { valor: 'externo', rotulo: 'Externo' },
+];
+
+const DADOS_INICIAIS = {
+  tipo: 'aluno',
+  nome: '',
+  email: '',
+  senha: '',
+  matricula: '',
+  idCurso: '',
+  numeroLattes: '',
+  vinculo: 'docente',
+};
 
 export function Cadastro() {
   const { usuario, registrar } = useAuth();
   const navegar = useNavigate();
 
   const [dados, setDados] = useState(DADOS_INICIAIS);
+  const [cursos, setCursos] = useState([]);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  useEffect(() => {
+    cursoService
+      .listar()
+      .then((resposta) => setCursos(resposta.cursos))
+      .catch(() => setCursos([]));
+  }, []);
 
   if (usuario) {
     return <Navigate to="/painel" replace />;
@@ -27,8 +51,27 @@ export function Cadastro() {
     setErro('');
     setEnviando(true);
 
+    const dadosDoCadastro =
+      dados.tipo === 'aluno'
+        ? {
+            tipo: 'aluno',
+            nome: dados.nome,
+            email: dados.email,
+            senha: dados.senha,
+            matricula: dados.matricula,
+            idCurso: dados.idCurso,
+          }
+        : {
+            tipo: 'pesquisador',
+            nome: dados.nome,
+            email: dados.email,
+            senha: dados.senha,
+            numeroLattes: dados.numeroLattes,
+            vinculo: dados.vinculo,
+          };
+
     try {
-      await registrar(dados);
+      await registrar(dadosDoCadastro);
       navegar('/painel', { replace: true });
     } catch (falha) {
       setErro(falha.message);
@@ -45,6 +88,14 @@ export function Cadastro() {
         </p>
 
         {erro && <p className="alerta alerta--erro">{erro}</p>}
+
+        <label className="campo">
+          <span>Tipo de conta</span>
+          <select name="tipo" value={dados.tipo} onChange={alterar}>
+            <option value="aluno">Aluno - consulta o acervo do curso</option>
+            <option value="pesquisador">Pesquisador - publica produções científicas</option>
+          </select>
+        </label>
 
         <label className="campo">
           <span>Nome</span>
@@ -85,13 +136,58 @@ export function Cadastro() {
           />
         </label>
 
-        <label className="campo">
-          <span>Papel</span>
-          <select name="role" value={dados.role} onChange={alterar}>
-            <option value="USER">USER - consulta o acervo</option>
-            <option value="ADMIN">ADMIN - administra o sistema</option>
-          </select>
-        </label>
+        {dados.tipo === 'aluno' ? (
+          <>
+            <label className="campo">
+              <span>Matrícula</span>
+              <input
+                type="text"
+                name="matricula"
+                value={dados.matricula}
+                onChange={alterar}
+                placeholder="Número da matrícula"
+                required
+              />
+            </label>
+
+            <label className="campo">
+              <span>Curso</span>
+              <select name="idCurso" value={dados.idCurso} onChange={alterar} required>
+                <option value="">Selecione um curso</option>
+                {cursos.map((curso) => (
+                  <option key={curso.id} value={curso.id}>
+                    {curso.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : (
+          <>
+            <label className="campo">
+              <span>Número Lattes</span>
+              <input
+                type="text"
+                name="numeroLattes"
+                value={dados.numeroLattes}
+                onChange={alterar}
+                placeholder="Identificador do currículo Lattes"
+                required
+              />
+            </label>
+
+            <label className="campo">
+              <span>Vínculo</span>
+              <select name="vinculo" value={dados.vinculo} onChange={alterar}>
+                {VINCULOS.map((vinculo) => (
+                  <option key={vinculo.valor} value={vinculo.valor}>
+                    {vinculo.rotulo}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
 
         <button type="submit" className="botao botao--primario" disabled={enviando}>
           {enviando ? 'Cadastrando...' : 'Cadastrar'}

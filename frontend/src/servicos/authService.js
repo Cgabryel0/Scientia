@@ -1,7 +1,7 @@
 import { requisitar } from './api.js';
 
-export function cadastrar({ nome, email, senha, role }) {
-  return requisitar('/auth/cadastro', { metodo: 'POST', corpo: { nome, email, senha, role } });
+export function cadastrar(dados) {
+  return requisitar('/auth/cadastro', { metodo: 'POST', corpo: dados });
 }
 
 export function login(email, senha) {

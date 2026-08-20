@@ -22,7 +22,7 @@ export function Usuarios() {
     <section>
       <h1 className="pagina__titulo">Usuários cadastrados</h1>
       <p className="pagina__descricao">
-        Endpoint restrito ao papel ADMIN, tanto no guard da rota quanto no backend.
+        Endpoint restrito ao tipo admin, tanto no guard da rota quanto no backend.
       </p>
 
       {erro && <p className="alerta alerta--erro">{erro}</p>}
@@ -35,7 +35,7 @@ export function Usuarios() {
               <tr>
                 <th>Nome</th>
                 <th>E-mail</th>
-                <th>Papel</th>
+                <th>Tipo</th>
                 <th>Cadastrado em</th>
               </tr>
             </thead>
@@ -45,8 +45,8 @@ export function Usuarios() {
                   <td>{item.nome}</td>
                   <td>{item.email}</td>
                   <td>
-                    <span className={`etiqueta etiqueta--${item.role.toLowerCase()}`}>
-                      {item.role}
+                    <span className={`etiqueta etiqueta--${item.tipo}`}>
+                      {item.tipo}
                     </span>
                   </td>
                   <td>{new Date(item.criadoEm).toLocaleDateString('pt-BR')}</td>

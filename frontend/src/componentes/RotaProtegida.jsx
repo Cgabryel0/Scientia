@@ -4,9 +4,9 @@ import { useAuth } from '../contexto/AuthContext.jsx';
 
 /**
  * Guard das rotas. Sem sessão válida devolve o visitante para o login; com
- * sessão, mas sem o papel exigido pela rota, manda para a tela de acesso negado.
+ * sessão, mas sem o tipo exigido pela rota, manda para a tela de acesso negado.
  */
-export function RotaProtegida({ rolesPermitidos }) {
+export function RotaProtegida({ tipos }) {
   const { usuario, carregando } = useAuth();
   const local = useLocation();
 
@@ -18,7 +18,7 @@ export function RotaProtegida({ rolesPermitidos }) {
     return <Navigate to="/login" state={{ destino: local.pathname }} replace />;
   }
 
-  if (rolesPermitidos && !rolesPermitidos.includes(usuario.role)) {
+  if (tipos && !tipos.includes(usuario.tipo)) {
     return <Navigate to="/sem-permissao" replace />;
   }
 
