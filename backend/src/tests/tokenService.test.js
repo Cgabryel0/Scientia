@@ -4,20 +4,20 @@ import assert from 'node:assert';
 import { gerarToken, revogarToken, validarToken } from '../services/tokenService.js';
 
 const usuarioFalso = {
-  id: 'id-do-usuario',
+  id: 151,
   nome: 'Fulano de Tal',
   email: 'fulano@teste.br',
-  role: 'ADMIN',
+  tipo: 'admin',
 };
 
 describe('Ciclo de vida do token JWT', () => {
-  it('o token gerado carrega identificador, nome, e-mail e papel do usuário', () => {
+  it('o token gerado carrega identificador, nome, email e tipo do usuário', () => {
     const conteudo = validarToken(gerarToken(usuarioFalso));
 
-    assert.strictEqual(conteudo.sub, usuarioFalso.id);
+    assert.strictEqual(conteudo.sub, String(usuarioFalso.id));
     assert.strictEqual(conteudo.nome, usuarioFalso.nome);
     assert.strictEqual(conteudo.email, usuarioFalso.email);
-    assert.strictEqual(conteudo.role, usuarioFalso.role);
+    assert.strictEqual(conteudo.tipo, usuarioFalso.tipo);
   });
 
   it('recusa token adulterado com erro 401', () => {
@@ -49,7 +49,6 @@ describe('Ciclo de vida do token JWT', () => {
 
     revogarToken(validarToken(tokenRevogado));
 
-    // Mesmo usuário, sessão diferente (jti diferente): continua valendo.
     assert.ok(validarToken(tokenDeOutraSessao));
   });
 });

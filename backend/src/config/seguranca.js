@@ -1,10 +1,6 @@
-/**
- * Concentra em um lugar só quais endpoints são abertos. Tudo que não estiver
- * listado aqui passa obrigatoriamente pelo filtro de autenticação, e as travas
- * por papel ficam declaradas nas rotas com o middleware exigeRole.
- */
 const ROTAS_PUBLICAS = [
   { metodo: 'GET', caminho: '/api/status' },
+  { metodo: 'GET', caminho: '/api/cursos' },
   { metodo: 'POST', caminho: '/api/auth/cadastro' },
   { metodo: 'POST', caminho: '/api/auth/login' },
 ];

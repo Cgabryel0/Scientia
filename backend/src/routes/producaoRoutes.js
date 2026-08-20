@@ -5,7 +5,6 @@ import * as producaoConsultaController from '../controllers/producaoConsultaCont
 
 const rotas = Router();
 
-// Consultar o acervo é para qualquer autenticado, por isso não há exigeRole aqui.
 rotas.get('/', producaoConsultaController.listar);
 rotas.post('/', producaoCadastroController.cadastrar);
 

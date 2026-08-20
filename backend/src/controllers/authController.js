@@ -1,10 +1,9 @@
-import { usuarioResposta } from '../dto/usuarioDTO.js';
+import { usuarioComPerfilResposta, usuarioResposta } from '../dto/usuarioDTO.js';
 import { gerarToken, revogarToken } from '../services/tokenService.js';
 import * as usuarioService from '../services/usuarioService.js';
 
 export async function cadastrar(req, res) {
-  const { nome, email, senha, role } = req.body ?? {};
-  const usuario = await usuarioService.cadastrar({ nome, email, senha, role });
+  const usuario = await usuarioService.cadastrar(req.body ?? {});
 
   res.status(201).json({
     usuario: usuarioResposta(usuario),
@@ -27,8 +26,7 @@ export function logout(req, res) {
   res.json({ mensagem: 'Sessão encerrada.' });
 }
 
-/** Usado pelo frontend para saber de quem é o token guardado no navegador. */
-export function perfil(req, res) {
-  const usuario = usuarioService.buscarPorId(req.usuario.sub);
-  res.json({ usuario: usuarioResposta(usuario) });
+export async function perfil(req, res) {
+  const usuario = await usuarioService.buscarPerfilPorId(req.usuario.sub);
+  res.json({ usuario: usuarioComPerfilResposta(usuario) });
 }
