@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../contexto/AuthContext.jsx';
+import { podeCadastrarNoAcervo } from '../utils/acervo.js';
 
 export function Painel() {
   const { usuario } = useAuth();
@@ -43,6 +44,23 @@ export function Painel() {
             </p>
           )}
         </article>
+
+        {podeCadastrarNoAcervo(usuario) && (
+          <article className="cartao">
+            <h2>Alimentar o acervo</h2>
+            <p>
+              Seu perfil pode registrar produções no acervo relacional do curso.
+            </p>
+            <div className="painel__atalhos">
+              <Link to="/publicacoes/cadastro" className="botao botao--discreto">
+                Cadastrar publicação
+              </Link>
+              <Link to="/projetos/cadastro" className="botao botao--discreto">
+                Cadastrar projeto
+              </Link>
+            </div>
+          </article>
+        )}
       </div>
     </section>
   );

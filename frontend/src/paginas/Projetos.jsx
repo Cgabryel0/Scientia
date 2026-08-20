@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Paginacao } from '../componentes/Paginacao.jsx';
+import { useAuth } from '../contexto/AuthContext.jsx';
 import * as grupoService from '../servicos/grupoService.js';
 import * as projetoService from '../servicos/projetoService.js';
-import { POR_PAGINA, ROTULOS_STATUS } from '../utils/acervo.js';
+import { podeCadastrarNoAcervo, POR_PAGINA, ROTULOS_STATUS } from '../utils/acervo.js';
 
 export function Projetos() {
+  const { usuario } = useAuth();
+
   const [projetos, setProjetos] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
   const [erro, setErro] = useState('');
@@ -93,6 +96,12 @@ export function Projetos() {
             Veja os projetos dos grupos de pesquisa e as publicações que saíram deles.
           </p>
         </div>
+
+        {podeCadastrarNoAcervo(usuario) && (
+          <Link to="/projetos/cadastro" className="botao botao--primario botao--compacto">
+            Cadastrar projeto
+          </Link>
+        )}
       </div>
 
       <form className="filtros-acervo" onSubmit={(evento) => evento.preventDefault()}>

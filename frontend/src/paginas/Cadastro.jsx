@@ -3,12 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../contexto/AuthContext.jsx';
 import * as cursoService from '../servicos/cursoService.js';
-
-const VINCULOS = [
-  { valor: 'docente', rotulo: 'Docente' },
-  { valor: 'discente', rotulo: 'Discente' },
-  { valor: 'externo', rotulo: 'Externo' },
-];
+import { ROTULOS_VINCULO } from '../utils/acervo.js';
 
 const DADOS_INICIAIS = {
   tipo: 'aluno',
@@ -179,9 +174,9 @@ export function Cadastro() {
             <label className="campo">
               <span>Vínculo</span>
               <select name="vinculo" value={dados.vinculo} onChange={alterar}>
-                {VINCULOS.map((vinculo) => (
-                  <option key={vinculo.valor} value={vinculo.valor}>
-                    {vinculo.rotulo}
+                {Object.entries(ROTULOS_VINCULO).map(([valor, rotulo]) => (
+                  <option key={valor} value={valor}>
+                    {rotulo}
                   </option>
                 ))}
               </select>

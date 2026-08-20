@@ -1,0 +1,237 @@
+/* Formulários de escrita no acervo */
+.formulario-acervo {
+  max-width: 44rem;
+  padding: 1.75rem;
+  background-color: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.formulario-acervo textarea {
+  resize: vertical;
+}
+
+.formulario-acervo__linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0 1rem;
+}
+
+.formulario-acervo__acoes {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--borda);
+}
+
+.formulario-acervo__acoes .botao--discreto:hover {
+  border-color: var(--primaria);
+  color: var(--primaria);
+}
+
+.campo__rotulo {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+/* Busca com resultados escolhíveis */
+.seletor-busca {
+  margin-bottom: 1.1rem;
+}
+
+.seletor-busca__escolhido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--primaria);
+  border-radius: var(--raio);
+  background-color: rgba(31, 75, 142, 0.06);
+}
+
+.seletor-busca__estado {
+  margin: 0 0 0.6rem;
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+}
+
+.seletor-busca__resultados {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  max-height: 15rem;
+  overflow-y: auto;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.seletor-busca__resultados li + li {
+  border-top: 1px solid var(--borda);
+}
+
+.seletor-busca__resultado {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: none;
+  background-color: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.seletor-busca__resultado:hover:not(:disabled) {
+  background-color: rgba(31, 75, 142, 0.06);
+}
+
+.seletor-busca__resultado:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.seletor-busca__detalhe {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+/* Editor de autores */
+.editor-autores {
+  margin-bottom: 1.1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background-color: var(--fundo);
+}
+
+.editor-autores__cabecalho {
+  margin-bottom: 1rem;
+}
+
+.editor-autores__cabecalho h2 {
+  font-size: 1.05rem;
+}
+
+.editor-autores__cabecalho p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+}
+
+.editor-autores__vazio {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.editor-autores__lista {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.editor-autores__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.editor-autores__posicao {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background-color: var(--primaria);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.editor-autores__dados {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.editor-autores__acoes {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.editor-autores__novo {
+  margin-top: 1.1rem;
+  padding: 1rem;
+  background-color: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.editor-autores__novo .campo:last-of-type {
+  margin-bottom: 0.75rem;
+}
+
+/* Escolha múltipla de áreas */
+.selecao-areas {
+  margin: 0 0 1.1rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.selecao-areas legend {
+  padding: 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.selecao-areas .lista-chips {
+  margin-top: 0;
+}
+
+.chip--escolha {
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.chip--escolha input {
+  margin: 0;
+  accent-color: var(--primaria);
+}
+
+.chip--marcado {
+  border-color: var(--primaria);
+  background-color: rgba(31, 75, 142, 0.2);
+  font-weight: 600;
+}
+
+.painel__atalhos {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.painel__atalhos .botao--discreto:hover {
+  border-color: var(--primaria);
+  color: var(--primaria);
+}

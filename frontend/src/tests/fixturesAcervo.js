@@ -74,3 +74,57 @@ export const RESPOSTA_GRUPO = {
     projetos: [{ id: 3, titulo: 'Inteligência artificial aplicada ao Agreste', status: 'em_andamento' }],
   },
 };
+
+export const RESPOSTA_PESQUISADORES = {
+  pesquisadores: [
+    {
+      id: 91,
+      nome: 'Ana Souza',
+      vinculo: 'docente',
+      numeroLattes: '1234567890123456',
+      totalPublicacoes: 12,
+    },
+    {
+      id: 104,
+      nome: 'Bruno Lima',
+      vinculo: 'discente',
+      numeroLattes: '9876543210987654',
+      totalPublicacoes: 3,
+    },
+  ],
+  paginacao: { pagina: 1, porPagina: 10, total: 2 },
+};
+
+export const RESPOSTA_AREAS = {
+  areas: [
+    { id: 1, nome: 'Ciência da Computação' },
+    { id: 5, nome: 'Engenharia Agronômica' },
+  ],
+};
+
+export const CORPO_NOVA_PUBLICACAO = {
+  titulo: 'Análise de desempenho de algoritmos de aprendizado',
+  tipo: 'artigo',
+  ano: 2024,
+  doi: '10.1000/exemplo.1',
+  veiculo: 'Revista Brasileira de Computação',
+  idProjeto: 3,
+  autores: [
+    { id: 91 },
+    { nome: 'Bruno Lima', numeroLattes: '9876543210987654', vinculo: 'docente', email: '' },
+  ],
+};
+
+export const RESPOSTA_PUBLICACAO_CRIADA = {
+  publicacao: RESPOSTA_PUBLICACOES.publicacoes[0],
+};
+
+export const CORPO_NOVO_PROJETO = {
+  titulo: 'Inteligência artificial aplicada ao Agreste',
+  resumo: 'Estuda a aplicação de aprendizado de máquina...',
+  dataInicio: '2024-03-01',
+  dataFim: null,
+  status: 'em_andamento',
+  idGrupo: 2,
+  areas: [1, 5],
+};

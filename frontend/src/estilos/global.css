@@ -68,7 +68,8 @@ h2 {
 }
 
 .campo input,
-.campo select {
+.campo select,
+.campo textarea {
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
@@ -79,7 +80,8 @@ h2 {
 }
 
 .campo input:focus,
-.campo select:focus {
+.campo select:focus,
+.campo textarea:focus {
   outline: none;
   border-color: var(--primaria);
   box-shadow: 0 0 0 3px rgba(31, 75, 142, 0.15);

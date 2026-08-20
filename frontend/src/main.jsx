@@ -9,6 +9,7 @@ import './estilos/autenticacao.css';
 import './estilos/painel.css';
 import './estilos/publicacoes.css';
 import './estilos/projetos.css';
+import './estilos/cadastro-acervo.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

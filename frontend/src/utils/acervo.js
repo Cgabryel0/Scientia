@@ -11,6 +11,12 @@ export const ROTULOS_STATUS = {
   cancelado: 'Cancelado',
 };
 
+export const ROTULOS_VINCULO = {
+  docente: 'Docente',
+  discente: 'Discente',
+  externo: 'Externo',
+};
+
 export const ROTULOS_PAPEL = {
   coordenador: 'Coordenador',
   participante: 'Participante',
@@ -19,6 +25,12 @@ export const ROTULOS_PAPEL = {
 };
 
 export const POR_PAGINA = 20;
+
+export const TIPOS_QUE_CADASTRAM = ['pesquisador', 'admin'];
+
+export function podeCadastrarNoAcervo(usuario) {
+  return Boolean(usuario) && TIPOS_QUE_CADASTRAM.includes(usuario.tipo);
+}
 
 export function ordenarAutores(autores = []) {
   return [...autores].sort((um, outro) => um.ordem - outro.ordem);

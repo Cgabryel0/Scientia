@@ -17,6 +17,12 @@ vi.mock('../servicos/grupoService.js', () => ({
   buscarPorId: vi.fn(),
 }));
 
+const sessaoFalsa = { usuario: null };
+
+vi.mock('../contexto/AuthContext.jsx', () => ({
+  useAuth: () => sessaoFalsa,
+}));
+
 function renderizarTela() {
   return render(
     <MemoryRouter>
@@ -27,6 +33,7 @@ function renderizarTela() {
 
 describe('Tela de projetos de pesquisa', () => {
   beforeEach(() => {
+    sessaoFalsa.usuario = null;
     vi.useFakeTimers();
     projetoService.listar.mockResolvedValue(RESPOSTA_PROJETOS);
     grupoService.listar.mockResolvedValue(RESPOSTA_GRUPOS);
@@ -128,5 +135,30 @@ describe('Tela de projetos de pesquisa', () => {
       pagina: 1,
       porPagina: 20,
     });
+  });
+
+  it('sem sessão ou com conta de aluno, não oferece o atalho de cadastro', async () => {
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.queryByRole('link', { name: /cadastrar projeto/i })).not.toBeInTheDocument();
+
+    sessaoFalsa.usuario = { id: 152, nome: 'Ana Souza', tipo: 'aluno' };
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.queryByRole('link', { name: /cadastrar projeto/i })).not.toBeInTheDocument();
+  });
+
+  it.each(['pesquisador', 'admin'])('a conta %s ganha o atalho de cadastro', async (tipo) => {
+    sessaoFalsa.usuario = { id: 7, nome: 'Ana Souza', tipo };
+
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.getByRole('link', { name: /cadastrar projeto/i })).toHaveAttribute(
+      'href',
+      '/projetos/cadastro',
+    );
   });
 });
