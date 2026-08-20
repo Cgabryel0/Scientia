@@ -14,3 +14,8 @@ export async function detalhar(req, res) {
   const publicacao = await publicacaoService.buscarPorId(req.params.id);
   res.json({ publicacao: publicacaoResposta(publicacao) });
 }
+
+export async function cadastrar(req, res) {
+  const publicacao = await publicacaoService.cadastrar(req.body ?? {}, req.usuario);
+  res.status(201).json({ publicacao: publicacaoResposta(publicacao) });
+}

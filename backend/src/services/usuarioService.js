@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs';
 import { ADMIN_INICIAL } from '../config/ambiente.js';
 import { transacao } from '../config/bd.js';
 import { ErroHttp } from '../erros/ErroHttp.js';
+import { FORMATO_EMAIL } from '../models/formatoEmail.js';
 import * as repositorioCursos from '../models/repositorioCursos.js';
 import * as repositorioUsuarios from '../models/repositorioUsuarios.js';
 
 const TAMANHO_MINIMO_SENHA = 6;
-const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TIPOS_CADASTRO = ['aluno', 'pesquisador'];
 const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
 const HASH_DUMMY_AUTENTICACAO = '$2b$10$1sOjgIPs9/ewWhYWL9EJvu0xDWtQtbWqKKc1YMh0pn9h1x87NlEya';

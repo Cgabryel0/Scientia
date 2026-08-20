@@ -84,6 +84,92 @@ export async function buscarPorId(id) {
   };
 }
 
+export async function existe(id, executor) {
+  const { rows } = await executarConsulta(
+    executor,
+    `
+      SELECT 1
+      FROM projeto_pesquisa
+      WHERE id_projeto = $1
+      LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows.length > 0;
+}
+
+export async function editalExiste(id, executor) {
+  const { rows } = await executarConsulta(
+    executor,
+    `
+      SELECT 1
+      FROM edital
+      WHERE id_edital = $1
+      LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows.length > 0;
+}
+
+export async function areasExistentes(ids, executor) {
+  const { rows } = await executarConsulta(
+    executor,
+    `
+      SELECT id_area
+      FROM area_conhecimento
+      WHERE id_area = ANY($1::int[])
+    `,
+    [ids],
+  );
+
+  return rows.map((linha) => linha.id_area);
+}
+
+export async function criar(executor, { titulo, resumo, dataInicio, dataFim, status, idGrupo, idEdital }) {
+  const { rows } = await executor.query(
+    `
+      INSERT INTO projeto_pesquisa (
+        id_grupo,
+        id_edital,
+        titulo,
+        resumo,
+        data_inicio,
+        data_fim,
+        status,
+        origem
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'manual')
+      RETURNING id_projeto
+    `,
+    [idGrupo, idEdital, titulo, resumo, dataInicio, dataFim, status],
+  );
+
+  return rows[0].id_projeto;
+}
+
+export async function vincularArea(executor, { idProjeto, idArea }) {
+  await executor.query(
+    `
+      INSERT INTO possui_area (id_projeto, id_area)
+      VALUES ($1, $2)
+    `,
+    [idProjeto, idArea],
+  );
+}
+
+export async function criarParticipacao(executor, { idProjeto, idPesquisador, dataEntrada, papel }) {
+  await executor.query(
+    `
+      INSERT INTO participacao (id_pesquisador, id_projeto, data_entrada, papel)
+      VALUES ($1, $2, $3, $4)
+    `,
+    [idPesquisador, idProjeto, dataEntrada, papel],
+  );
+}
+
 async function contar(clausula, parametros) {
   const { rows } = await consultar(
     `
@@ -284,4 +370,12 @@ function formatarData(valor) {
   }
 
   return valor.toISOString().slice(0, 10);
+}
+
+function executarConsulta(executor, sql, parametros) {
+  if (executor) {
+    return executor.query(sql, parametros);
+  }
+
+  return consultar(sql, parametros);
 }

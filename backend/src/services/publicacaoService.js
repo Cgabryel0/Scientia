@@ -1,13 +1,21 @@
+import { transacao } from '../config/bd.js';
 import { ErroHttp } from '../erros/ErroHttp.js';
+import { FORMATO_EMAIL } from '../models/formatoEmail.js';
+import * as repositorioPesquisadores from '../models/repositorioPesquisadores.js';
+import * as repositorioProjetos from '../models/repositorioProjetos.js';
 import * as repositorioPublicacoes from '../models/repositorioPublicacoes.js';
 import {
+  POSTGRES_INTEGER_MAXIMO,
   validarEnumOpcional,
   validarId,
   validarInteiroOpcional,
   validarPaginacao,
 } from './consultaParametrosService.js';
+import { resolverPesquisadorAutenticado } from './pesquisadorAutenticadoService.js';
 
 const TIPOS_PUBLICACAO = ['artigo', 'capitulo', 'resumo'];
+const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
+const CAMPOS_TEXTO_PUBLICACAO = ['titulo', 'tipo', 'doi', 'veiculo'];
 
 export async function listar(filtros) {
   const paginacao = validarPaginacao(filtros);
@@ -54,4 +62,245 @@ export async function buscarPorId(valorId) {
   }
 
   return publicacao;
+}
+
+export async function cadastrar(dados, usuario) {
+  const dadosPublicacao = dados ?? {};
+  validarTiposDaPublicacao(dadosPublicacao);
+  const publicacao = normalizarPublicacao(dadosPublicacao);
+  validarDadosDaPublicacao(publicacao);
+
+  try {
+    const idPublicacao = await transacao(async (cliente) => {
+      await resolverPesquisadorAutenticado(usuario, cliente);
+
+      if (!(await repositorioProjetos.existe(publicacao.idProjeto, cliente))) {
+        throw new ErroHttp(400, 'Projeto não encontrado.');
+      }
+
+      const autores = await resolverAutores(publicacao.autores, cliente);
+      const idCriado = await repositorioPublicacoes.criar(cliente, publicacao);
+
+      for (const [indice, autor] of autores.entries()) {
+        await repositorioPublicacoes.criarAutoria(cliente, {
+          idPublicacao: idCriado,
+          idPesquisador: autor.id,
+          ordem: indice + 1,
+        });
+      }
+
+      return idCriado;
+    });
+
+    return buscarPorId(idPublicacao);
+  } catch (erro) {
+    tratarConflitoUnicoPublicacao(erro);
+    throw erro;
+  }
+}
+
+async function resolverAutores(autores, cliente) {
+  const resolvidos = [];
+  const idsResolvidos = new Set();
+
+  for (const autor of autores) {
+    const pesquisador = await resolverAutor(autor, cliente);
+
+    if (!pesquisador) {
+      throw new ErroHttp(400, 'Autor não encontrado.');
+    }
+
+    if (idsResolvidos.has(pesquisador.id)) {
+      throw new ErroHttp(400, 'Não repita o mesmo autor na lista.');
+    }
+
+    idsResolvidos.add(pesquisador.id);
+    resolvidos.push(pesquisador);
+  }
+
+  return resolvidos;
+}
+
+async function resolverAutor(autor, cliente) {
+  if (autor.id !== undefined) {
+    const pesquisador = await repositorioPesquisadores.buscarPorId(autor.id, cliente);
+
+    if (!pesquisador) {
+      throw new ErroHttp(400, 'Autor não encontrado.');
+    }
+
+    return pesquisador;
+  }
+
+  const existente = await repositorioPesquisadores.buscarPorNumeroLattes(autor.numeroLattes, cliente);
+
+  if (existente) {
+    return existente;
+  }
+
+  const criado = await repositorioPesquisadores.criarManual(cliente, autor);
+
+  if (criado) {
+    return criado;
+  }
+
+  return repositorioPesquisadores.buscarPorNumeroLattes(autor.numeroLattes, cliente);
+}
+
+function validarTiposDaPublicacao(dados) {
+  const textoInvalido = CAMPOS_TEXTO_PUBLICACAO.some(
+    (campo) => dados[campo] != null && typeof dados[campo] !== 'string',
+  );
+  const numeroInvalido =
+    !numeroValidoQuandoPresente(dados.ano) ||
+    !numeroValidoQuandoPresente(dados.idProjeto) ||
+    (Array.isArray(dados.autores) &&
+      dados.autores.some((autor) => autor?.id != null && !numeroValidoQuandoPresente(autor.id)));
+  const autoresInvalidos =
+    dados.autores != null &&
+    (!Array.isArray(dados.autores) ||
+      dados.autores.some((autor) => !autor || Array.isArray(autor) || typeof autor !== 'object'));
+  const textoAutorInvalido =
+    Array.isArray(dados.autores) &&
+    dados.autores.some((autor) =>
+      ['nome', 'numeroLattes', 'email', 'vinculo'].some(
+        (campo) => autor[campo] != null && typeof autor[campo] !== 'string',
+      ),
+    );
+
+  if (textoInvalido || numeroInvalido || autoresInvalidos || textoAutorInvalido) {
+    throw new ErroHttp(400, 'Campos da publicação inválidos.');
+  }
+}
+
+function normalizarPublicacao(dados) {
+  return {
+    titulo: String(dados.titulo ?? '').trim(),
+    tipo: String(dados.tipo ?? '').trim(),
+    ano: dados.ano,
+    doi: normalizarTextoOpcional(dados.doi),
+    veiculo: String(dados.veiculo ?? '').trim(),
+    idProjeto: dados.idProjeto,
+    autores: Array.isArray(dados.autores) ? dados.autores.map(normalizarAutor) : dados.autores,
+  };
+}
+
+function normalizarAutor(autor) {
+  return {
+    ...(autor.id !== undefined && autor.id !== null ? { id: autor.id } : {}),
+    nome: String(autor.nome ?? '').trim(),
+    numeroLattes: String(autor.numeroLattes ?? '').trim(),
+    email: String(autor.email ?? '').trim(),
+    vinculo: String(autor.vinculo ?? '').trim(),
+  };
+}
+
+function validarDadosDaPublicacao(publicacao) {
+  const problemas = [];
+
+  if (!publicacao.titulo) {
+    problemas.push('Informe o título.');
+  } else if (publicacao.titulo.length > 255) {
+    problemas.push('O título deve ter no máximo 255 caracteres.');
+  }
+
+  if (!TIPOS_PUBLICACAO.includes(publicacao.tipo)) {
+    problemas.push('O tipo deve ser artigo, capítulo ou resumo.');
+  }
+
+  if (!Number.isInteger(publicacao.ano) || publicacao.ano < 1950 || publicacao.ano > 2100) {
+    problemas.push('O ano deve ser um número inteiro entre 1950 e 2100.');
+  }
+
+  if (!publicacao.veiculo) {
+    problemas.push('Informe o veículo.');
+  } else if (publicacao.veiculo.length > 150) {
+    problemas.push('O veículo deve ter no máximo 150 caracteres.');
+  }
+
+  if (publicacao.doi && publicacao.doi.length > 100) {
+    problemas.push('O DOI deve ter no máximo 100 caracteres.');
+  }
+
+  if (!Number.isInteger(publicacao.idProjeto) || publicacao.idProjeto < 1 || publicacao.idProjeto > POSTGRES_INTEGER_MAXIMO) {
+    problemas.push('Informe um projeto válido.');
+  }
+
+  validarAutores(publicacao.autores, problemas);
+
+  if (problemas.length > 0) {
+    throw new ErroHttp(400, problemas.join(' '));
+  }
+}
+
+function validarAutores(autores, problemas) {
+  if (!Array.isArray(autores) || autores.length === 0) {
+    problemas.push('Informe ao menos um autor.');
+    return;
+  }
+
+  const numerosLattes = new Set();
+
+  for (const autor of autores) {
+    const ehExistente = autor.id !== undefined;
+    const temDadosNovos = Boolean(autor.nome || autor.numeroLattes || autor.vinculo);
+
+    if (ehExistente === temDadosNovos) {
+      problemas.push('Informe um autor existente ou os dados de um autor novo.');
+      continue;
+    }
+
+    if (ehExistente) {
+      if (!Number.isInteger(autor.id) || autor.id < 1 || autor.id > POSTGRES_INTEGER_MAXIMO) {
+        problemas.push('Informe um autor existente ou os dados de um autor novo.');
+      }
+      continue;
+    }
+
+    if (!autor.nome || !autor.numeroLattes || !VINCULOS_PESQUISADOR.includes(autor.vinculo)) {
+      problemas.push('Informe um autor existente ou os dados de um autor novo.');
+      continue;
+    }
+
+    if (autor.nome.length > 150) {
+      problemas.push('O nome do autor deve ter no máximo 150 caracteres.');
+    }
+
+    if (autor.numeroLattes.length > 50) {
+      problemas.push('O número Lattes deve ter no máximo 50 caracteres.');
+    }
+
+    if (autor.email && !FORMATO_EMAIL.test(autor.email)) {
+      problemas.push('Informe um email válido para o autor novo.');
+    }
+
+    if (autor.email.length > 150) {
+      problemas.push('O email do autor deve ter no máximo 150 caracteres.');
+    }
+
+    if (numerosLattes.has(autor.numeroLattes)) {
+      problemas.push('Não repita o mesmo autor na lista.');
+    }
+
+    numerosLattes.add(autor.numeroLattes);
+  }
+}
+
+function tratarConflitoUnicoPublicacao(erro) {
+  if (erro.code === '23505' && erro.constraint === 'uq_publicacao_doi') {
+    throw new ErroHttp(409, 'Já existe uma publicação com esse DOI.');
+  }
+
+  if (erro.code === '23503' && erro.constraint === 'fk_publicacao_projeto') {
+    throw new ErroHttp(400, 'Projeto não encontrado.');
+  }
+}
+
+function normalizarTextoOpcional(valor) {
+  const texto = String(valor ?? '').trim();
+  return texto || null;
+}
+
+function numeroValidoQuandoPresente(valor) {
+  return valor == null || (typeof valor === 'number' && Number.isFinite(valor));
 }

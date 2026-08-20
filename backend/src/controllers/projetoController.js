@@ -14,3 +14,8 @@ export async function detalhar(req, res) {
   const projeto = await projetoService.buscarPorId(req.params.id);
   res.json({ projeto: projetoDetalheResposta(projeto) });
 }
+
+export async function cadastrar(req, res) {
+  const projeto = await projetoService.cadastrar(req.body ?? {}, req.usuario);
+  res.status(201).json({ projeto: projetoDetalheResposta(projeto) });
+}
