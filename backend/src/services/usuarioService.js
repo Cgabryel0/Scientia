@@ -10,9 +10,13 @@ const TAMANHO_MINIMO_SENHA = 6;
 const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TIPOS_CADASTRO = ['aluno', 'pesquisador'];
 const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
+const HASH_DUMMY_AUTENTICACAO = '$2b$10$1sOjgIPs9/ewWhYWL9EJvu0xDWtQtbWqKKc1YMh0pn9h1x87NlEya';
+const CAMPOS_TEXTO_CADASTRO = ['tipo', 'nome', 'email', 'senha', 'matricula', 'numeroLattes', 'vinculo'];
 
 export async function cadastrar(dados) {
-  const cadastro = normalizarCadastro(dados);
+  const dadosCadastro = dados ?? {};
+  validarTiposDoCadastro(dadosCadastro);
+  const cadastro = normalizarCadastro(dadosCadastro);
   validarDadosDoCadastro(cadastro);
 
   if (await repositorioUsuarios.buscarPorEmail(cadastro.email)) {
@@ -29,13 +33,10 @@ export async function cadastrar(dados) {
 export async function autenticar(email, senha) {
   const credenciaisInvalidas = new ErroHttp(401, 'Email ou senha incorretos.');
   const usuario = await repositorioUsuarios.buscarPorEmail(email);
+  const senhaHash = usuario?.senhaHash ?? HASH_DUMMY_AUTENTICACAO;
+  const senhaConfere = await bcrypt.compare(String(senha ?? ''), senhaHash);
 
-  if (!usuario) {
-    throw credenciaisInvalidas;
-  }
-
-  const senhaConfere = await bcrypt.compare(String(senha ?? ''), usuario.senhaHash);
-  if (!senhaConfere) {
+  if (!usuario || !senhaConfere) {
     throw credenciaisInvalidas;
   }
 
@@ -172,6 +173,24 @@ function tratarConflitoUnico(erro) {
   }
 }
 
+function validarTiposDoCadastro(dados) {
+  const campoTextoInvalido = CAMPOS_TEXTO_CADASTRO.some(
+    (campo) => dados[campo] != null && typeof dados[campo] !== 'string',
+  );
+  const idCursoInvalido =
+    dados.idCurso != null &&
+    !(
+      (typeof dados.idCurso === 'number' && Number.isFinite(dados.idCurso)) ||
+      (typeof dados.idCurso === 'string' &&
+        dados.idCurso.trim() !== '' &&
+        Number.isFinite(Number(dados.idCurso.trim())))
+    );
+
+  if (campoTextoInvalido || idCursoInvalido) {
+    throw new ErroHttp(400, 'Campos de cadastro inválidos.');
+  }
+}
+
 function normalizarCadastro(dados = {}) {
   return {
     tipo: String(dados.tipo ?? '').trim(),
@@ -208,10 +227,29 @@ function validarDadosDoCadastro(cadastro) {
     problemas.push(`A senha precisa ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres.`);
   }
 
+  validarComprimentosDoCadastro(cadastro, problemas);
   validarDadosDoPerfil(cadastro, problemas);
 
   if (problemas.length > 0) {
     throw new ErroHttp(400, problemas.join(' '));
+  }
+}
+
+function validarComprimentosDoCadastro(cadastro, problemas) {
+  if (cadastro.nome.length > 150) {
+    problemas.push('O nome deve ter no máximo 150 caracteres.');
+  }
+
+  if (cadastro.email.length > 150) {
+    problemas.push('O email deve ter no máximo 150 caracteres.');
+  }
+
+  if (cadastro.matricula.length > 30) {
+    problemas.push('A matrícula deve ter no máximo 30 caracteres.');
+  }
+
+  if (cadastro.numeroLattes.length > 50) {
+    problemas.push('O número Lattes deve ter no máximo 50 caracteres.');
   }
 }
 

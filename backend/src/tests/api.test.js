@@ -1,14 +1,16 @@
 import { after, before, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
+import { setTimeout as aguardar } from 'node:timers/promises';
 import request from 'supertest';
 
 import { criarApp } from '../app.js';
 import { ADMIN_INICIAL } from '../config/ambiente.js';
-import { consultar, encerrarBanco } from '../config/bd.js';
+import { consultar, encerrarBanco, pool } from '../config/bd.js';
 import { garantirAdminInicial } from '../services/usuarioService.js';
 import { prepararBancoTeste, reiniciarBancoTeste } from './setupBancoTeste.js';
 
 const app = criarApp();
+const SENHA_HASH_TESTE = '$2b$10$1sOjgIPs9/ewWhYWL9EJvu0xDWtQtbWqKKc1YMh0pn9h1x87NlEya';
 
 const cadastrar = (dados) => request(app).post('/api/auth/cadastro').send(dados);
 
@@ -112,6 +114,120 @@ describe('Autenticação e contas', () => {
     assert.strictEqual(perfil.status, 200);
     assert.strictEqual(perfil.body.usuario.perfil.vinculo, 'docente');
     assert.strictEqual(perfil.body.usuario.perfil.origem, 'lattes');
+  });
+
+  it('recusa vínculo com pesquisador que já possui conta sem alterar o vínculo existente', async () => {
+    const contaExistente = await consultar(
+      `
+        INSERT INTO conta (email, senha_hash, tipo)
+        VALUES ($1, $2, $3)
+        RETURNING id_conta
+      `,
+      ['pesquisador.existente@ufape.edu.br', SENHA_HASH_TESTE, 'pesquisador'],
+    );
+    const idContaOriginal = contaExistente.rows[0].id_conta;
+
+    await consultar(
+      `
+        INSERT INTO pesquisador (id_conta, nome, numero_lattes, email, vinculo, origem)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+      [
+        idContaOriginal,
+        'Pesquisador Vinculado',
+        '8888888888888888',
+        'pesquisador.existente@ufape.edu.br',
+        'docente',
+        'lattes',
+      ],
+    );
+
+    await consultar(
+      `
+        INSERT INTO pesquisador (nome, numero_lattes, email, vinculo, origem)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+      ['Pesquisador Órfão', '7777777777777777', 'orfao@ufape.edu.br', 'docente', 'lattes'],
+    );
+
+    const resposta = await cadastrar(
+      dadosPesquisador({
+        nome: 'Tentativa Indevida',
+        email: 'tentativa@ufape.edu.br',
+        numeroLattes: '8888888888888888',
+      }),
+    );
+
+    assert.strictEqual(resposta.status, 409);
+    assert.strictEqual(resposta.body.mensagem, 'Esse número Lattes já pertence a outra conta.');
+
+    const pesquisador = await consultar(
+      `
+        SELECT id_conta
+        FROM pesquisador
+        WHERE numero_lattes = $1
+      `,
+      ['8888888888888888'],
+    );
+
+    assert.strictEqual(pesquisador.rows[0].id_conta, idContaOriginal);
+  });
+
+  it('permite apenas um cadastro concorrente para o mesmo pesquisador órfão sem deixar conta órfã', async () => {
+    const numeroLattes = '6666666666666666';
+    await consultar(
+      `
+        INSERT INTO pesquisador (nome, numero_lattes, email, vinculo, origem)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+      ['Pesquisador Órfão', numeroLattes, 'orfao.concorrente@ufape.edu.br', 'docente', 'lattes'],
+    );
+
+    const cliente = await pool.connect();
+    let respostas;
+
+    try {
+      await cliente.query('BEGIN');
+      await cliente.query('SELECT id_pesquisador FROM pesquisador WHERE numero_lattes = $1 FOR UPDATE', [
+        numeroLattes,
+      ]);
+
+      const respostasPendentes = Promise.all(
+        Array.from({ length: 5 }, (_, indice) =>
+          cadastrar(
+            dadosPesquisador({
+              nome: `Concorrente ${indice}`,
+              email: `concorrente${indice}@ufape.edu.br`,
+              numeroLattes,
+            }),
+          ),
+        ),
+      );
+
+      await aguardar(200);
+      await cliente.query('COMMIT');
+
+      respostas = await respostasPendentes;
+    } catch (erro) {
+      await cliente.query('ROLLBACK').catch(() => {});
+      throw erro;
+    } finally {
+      cliente.release();
+    }
+
+    const status = respostas.map((resposta) => resposta.status);
+
+    assert.strictEqual(status.filter((codigo) => codigo === 201).length, 1);
+    assert.strictEqual(status.filter((codigo) => codigo === 409).length, 4);
+
+    const contasOrfas = await consultar(`
+      SELECT c.id_conta
+      FROM conta c
+      LEFT JOIN pesquisador p ON p.id_conta = c.id_conta
+      WHERE c.tipo = 'pesquisador' AND p.id_pesquisador IS NULL
+    `);
+
+    assert.strictEqual(contasOrfas.rows.length, 0);
   });
 
   it('retorna 409 para email já cadastrado', async () => {
