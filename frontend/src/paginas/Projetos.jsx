@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Paginacao } from '../componentes/Paginacao.jsx';
+import * as grupoService from '../servicos/grupoService.js';
 import * as projetoService from '../servicos/projetoService.js';
 import { POR_PAGINA, ROTULOS_STATUS } from '../utils/acervo.js';
 
@@ -11,11 +12,27 @@ export function Projetos() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
 
+  const [grupos, setGrupos] = useState([]);
+
   const [busca, setBusca] = useState('');
   const [status, setStatus] = useState('');
+  const [idGrupo, setIdGrupo] = useState('');
   const [pagina, setPagina] = useState(1);
 
   const [buscaAplicada, setBuscaAplicada] = useState('');
+
+  useEffect(() => {
+    let atual = true;
+
+    grupoService
+      .listar({ porPagina: 100 })
+      .then((dados) => atual && setGrupos(dados.grupos))
+      .catch(() => {});
+
+    return () => {
+      atual = false;
+    };
+  }, []);
 
   useEffect(() => {
     const temporizador = setTimeout(() => {
@@ -32,7 +49,7 @@ export function Projetos() {
     setErro('');
 
     projetoService
-      .listar({ busca: buscaAplicada, status, pagina, porPagina: POR_PAGINA })
+      .listar({ busca: buscaAplicada, status, idGrupo, pagina, porPagina: POR_PAGINA })
       .then((dados) => {
         if (!atual) {
           return;
@@ -46,18 +63,24 @@ export function Projetos() {
     return () => {
       atual = false;
     };
-  }, [buscaAplicada, status, pagina]);
+  }, [buscaAplicada, status, idGrupo, pagina]);
 
-  const filtrosAtivos = Boolean(buscaAplicada.trim() || status);
+  const filtrosAtivos = Boolean(buscaAplicada.trim() || status || idGrupo);
 
   function trocarStatus(evento) {
     setStatus(evento.target.value);
     setPagina(1);
   }
 
+  function trocarGrupo(evento) {
+    setIdGrupo(evento.target.value);
+    setPagina(1);
+  }
+
   function limparFiltros() {
     setBusca('');
     setStatus('');
+    setIdGrupo('');
     setPagina(1);
   }
 
@@ -72,10 +95,7 @@ export function Projetos() {
         </div>
       </div>
 
-      <form
-        className="filtros-acervo filtros-acervo--duplo"
-        onSubmit={(evento) => evento.preventDefault()}
-      >
+      <form className="filtros-acervo" onSubmit={(evento) => evento.preventDefault()}>
         <label className="campo filtros-acervo__busca">
           <span>Buscar</span>
           <input
@@ -93,6 +113,18 @@ export function Projetos() {
             {Object.entries(ROTULOS_STATUS).map(([valor, rotulo]) => (
               <option key={valor} value={valor}>
                 {rotulo}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="campo">
+          <span>Grupo de pesquisa</span>
+          <select value={idGrupo} onChange={trocarGrupo}>
+            <option value="">Todos os grupos</option>
+            {grupos.map((grupo) => (
+              <option key={grupo.id} value={grupo.id}>
+                {grupo.nome}
               </option>
             ))}
           </select>

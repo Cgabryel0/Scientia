@@ -3,10 +3,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Projetos } from '../paginas/Projetos.jsx';
+import * as grupoService from '../servicos/grupoService.js';
 import * as projetoService from '../servicos/projetoService.js';
-import { RESPOSTA_PROJETOS } from './fixturesAcervo.js';
+import { RESPOSTA_GRUPOS, RESPOSTA_PROJETOS } from './fixturesAcervo.js';
 
 vi.mock('../servicos/projetoService.js', () => ({
+  listar: vi.fn(),
+  buscarPorId: vi.fn(),
+}));
+
+vi.mock('../servicos/grupoService.js', () => ({
   listar: vi.fn(),
   buscarPorId: vi.fn(),
 }));
@@ -23,6 +29,7 @@ describe('Tela de projetos de pesquisa', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     projetoService.listar.mockResolvedValue(RESPOSTA_PROJETOS);
+    grupoService.listar.mockResolvedValue(RESPOSTA_GRUPOS);
   });
 
   afterEach(() => {
@@ -61,6 +68,7 @@ describe('Tela de projetos de pesquisa', () => {
     expect(projetoService.listar).toHaveBeenLastCalledWith({
       busca: '',
       status: 'concluido',
+      idGrupo: '',
       pagina: 1,
       porPagina: 20,
     });
@@ -78,7 +86,46 @@ describe('Tela de projetos de pesquisa', () => {
     expect(projetoService.listar).toHaveBeenLastCalledWith({
       busca: '',
       status: '',
+      idGrupo: '',
       pagina: 2,
+      porPagina: 20,
+    });
+  });
+
+  it('carrega os grupos de pesquisa no select buscando até 100 por página', async () => {
+    renderizarTela();
+    await act(async () => {});
+
+    expect(grupoService.listar).toHaveBeenCalledWith({ porPagina: 100 });
+
+    const grupo = RESPOSTA_GRUPOS.grupos[0];
+
+    expect(
+      within(screen.getByLabelText('Grupo de pesquisa')).getByRole('option', {
+        name: grupo.nome,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('escolher um grupo chama o serviço com idGrupo e volta para a página 1', async () => {
+    renderizarTela();
+    await act(async () => {});
+
+    fireEvent.click(screen.getByRole('button', { name: /próxima/i }));
+    await act(async () => {});
+
+    const grupo = RESPOSTA_GRUPOS.grupos[0];
+
+    fireEvent.change(screen.getByLabelText('Grupo de pesquisa'), {
+      target: { value: String(grupo.id) },
+    });
+    await act(async () => {});
+
+    expect(projetoService.listar).toHaveBeenLastCalledWith({
+      busca: '',
+      status: '',
+      idGrupo: String(grupo.id),
+      pagina: 1,
       porPagina: 20,
     });
   });
