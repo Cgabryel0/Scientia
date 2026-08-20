@@ -23,6 +23,11 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  color: inherit;
+}
+
+.cabecalho__marca:hover {
+  text-decoration: none;
 }
 
 .cabecalho__logo {
