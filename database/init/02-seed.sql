@@ -84,24 +84,6 @@ INSERT INTO area_conhecimento (id_area, nome_area) VALUES
     (23, 'Ciências Sociais Aplicadas'),
     (24, 'Economia');
 
-INSERT INTO agencia_fomento (id_agencia, nome) VALUES
-    (1,  'CNPq'),
-    (2,  'CAPES'),
-    (3,  'FACEPE'),
-    (4,  'FINEP'),
-    (5,  'MCTI'),
-    (6,  'MEC'),
-    (7,  'FNDE'),
-    (8,  'Embrapa'),
-    (9,  'Banco do Nordeste'),
-    (10, 'SUDENE'),
-    (11, 'Petrobras'),
-    (12, 'Fundação Banco do Brasil'),
-    (13, 'Ministério da Agricultura e Pecuária'),
-    (14, 'Fiocruz'),
-    (15, 'SECTI-PE'),
-    (16, 'Instituto Agronômico de Pernambuco');
-
 INSERT INTO conta (id_conta, email, senha_hash, tipo, data_criacao)
 SELECT
     p.seq,
@@ -147,10 +129,9 @@ SELECT
 FROM carga_pessoa p
 WHERE p.seq > 90;
 
-INSERT INTO edital (id_edital, id_agencia, nome_edital, ano)
+INSERT INTO edital (id_edital, nome_edital, ano)
 SELECT
     i,
-    1 + (i * 5) % 16,
     (ARRAY[
         'Edital Universal',
         'Programa Institucional de Bolsas de Iniciação Científica',
@@ -423,7 +404,6 @@ SELECT setval(pg_get_serial_sequence('curso', 'id_curso'), (SELECT MAX(id_curso)
 SELECT setval(pg_get_serial_sequence('conta', 'id_conta'), (SELECT MAX(id_conta) FROM conta));
 SELECT setval(pg_get_serial_sequence('aluno', 'id_aluno'), (SELECT MAX(id_aluno) FROM aluno));
 SELECT setval(pg_get_serial_sequence('pesquisador', 'id_pesquisador'), (SELECT MAX(id_pesquisador) FROM pesquisador));
-SELECT setval(pg_get_serial_sequence('agencia_fomento', 'id_agencia'), (SELECT MAX(id_agencia) FROM agencia_fomento));
 SELECT setval(pg_get_serial_sequence('edital', 'id_edital'), (SELECT MAX(id_edital) FROM edital));
 SELECT setval(pg_get_serial_sequence('grupo_pesquisa', 'id_grupo'), (SELECT MAX(id_grupo) FROM grupo_pesquisa));
 SELECT setval(pg_get_serial_sequence('projeto_pesquisa', 'id_projeto'), (SELECT MAX(id_projeto) FROM projeto_pesquisa));

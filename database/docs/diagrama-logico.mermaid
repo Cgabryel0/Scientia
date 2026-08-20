@@ -4,7 +4,6 @@ erDiagram
     CONTA |o--o| PESQUISADOR : autentica
     ALUNO ||--o{ CANDIDATURA : realiza
     VAGA ||--o{ CANDIDATURA : recebe
-    AGENCIA_FOMENTO ||--o{ EDITAL : lanca
     EDITAL |o--o{ PROJETO_PESQUISA : financia
     GRUPO_PESQUISA ||--o{ PROJETO_PESQUISA : gera
     PROJETO_PESQUISA ||--o{ VAGA : abre
@@ -45,13 +44,8 @@ erDiagram
         VARCHAR vinculo
         VARCHAR origem
     }
-    AGENCIA_FOMENTO {
-        SERIAL id_agencia PK
-        VARCHAR nome UK
-    }
     EDITAL {
         SERIAL id_edital PK
-        INT id_agencia FK
         VARCHAR nome_edital
         INT ano
     }
