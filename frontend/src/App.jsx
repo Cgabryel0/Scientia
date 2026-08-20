@@ -17,7 +17,7 @@ export function App() {
       <Route path="/cadastro" element={<Cadastro />} />
 
       {/* Daqui para baixo tudo exige sessão; a rota de usuários pede também o
-          papel ADMIN, com um segundo guard por dentro. */}
+          tipo admin, com um segundo guard por dentro. */}
       <Route element={<RotaProtegida />}>
         <Route element={<Layout />}>
           <Route path="/painel" element={<Painel />} />
@@ -25,7 +25,7 @@ export function App() {
           <Route path="/producoes/cadastro" element={<CadastroProducao />} />
           <Route path="/sem-permissao" element={<SemPermissao />} />
 
-          <Route element={<RotaProtegida rolesPermitidos={['ADMIN']} />}>
+          <Route element={<RotaProtegida tipos={['admin']} />}>
             <Route path="/usuarios" element={<Usuarios />} />
           </Route>
         </Route>

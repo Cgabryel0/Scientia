@@ -24,14 +24,14 @@ export function Cabecalho() {
       <nav className="cabecalho__menu">
         <NavLink to="/painel">Painel</NavLink>
         <NavLink to="/producoes">Produções</NavLink>
-        {/* O link só aparece para o ADMIN, mas quem barra o acesso de verdade
+        {/* O link só aparece para o admin, mas quem barra o acesso de verdade
             é o guard da rota e o backend. */}
-        {usuario.role === 'ADMIN' && <NavLink to="/usuarios">Usuários</NavLink>}
+        {usuario.tipo === 'admin' && <NavLink to="/usuarios">Usuários</NavLink>}
       </nav>
 
       <div className="cabecalho__usuario">
         <span className="cabecalho__nome">{usuario.nome}</span>
-        <span className={`etiqueta etiqueta--${usuario.role.toLowerCase()}`}>{usuario.role}</span>
+        <span className={`etiqueta etiqueta--${usuario.tipo}`}>{usuario.tipo}</span>
         <button type="button" className="botao botao--discreto" onClick={encerrarSessao}>
           Sair
         </button>

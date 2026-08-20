@@ -1,11 +1,10 @@
 import { Router } from 'express';
 
 import * as usuarioController from '../controllers/usuarioController.js';
-import { exigeRole } from '../middlewares/autorizacao.js';
+import { exigeTipo } from '../middlewares/autorizacao.js';
 
 const rotas = Router();
 
-// Listar todo mundo é tarefa de administração, então USER não entra aqui.
-rotas.get('/', exigeRole('ADMIN'), usuarioController.listar);
+rotas.get('/', exigeTipo('admin'), usuarioController.listar);
 
 export default rotas;

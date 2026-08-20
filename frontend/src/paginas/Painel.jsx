@@ -20,10 +20,10 @@ export function Painel() {
             <dd>{usuario.nome}</dd>
             <dt>E-mail</dt>
             <dd>{usuario.email}</dd>
-            <dt>Papel</dt>
+            <dt>Tipo</dt>
             <dd>
-              <span className={`etiqueta etiqueta--${usuario.role.toLowerCase()}`}>
-                {usuario.role}
+              <span className={`etiqueta etiqueta--${usuario.tipo}`}>
+                {usuario.tipo}
               </span>
             </dd>
           </dl>
@@ -31,7 +31,7 @@ export function Painel() {
 
         <article className="cartao">
           <h2>O que você pode acessar</h2>
-          {usuario.role === 'ADMIN' ? (
+          {usuario.tipo === 'admin' ? (
             <p>
               Como administrador, você também tem acesso à{' '}
               <Link to="/usuarios">lista de usuários</Link> do sistema.
@@ -39,7 +39,7 @@ export function Painel() {
           ) : (
             <p>
               Seu perfil consulta o <Link to="/producoes">acervo do curso</Link>. As telas
-              de administração ficam disponíveis apenas para contas com o papel ADMIN.
+              de administração ficam disponíveis apenas para contas do tipo admin.
             </p>
           )}
         </article>

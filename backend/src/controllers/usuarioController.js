@@ -1,6 +1,7 @@
 import { listaDeUsuariosResposta } from '../dto/usuarioDTO.js';
 import * as usuarioService from '../services/usuarioService.js';
 
-export function listar(req, res) {
-  res.json({ usuarios: listaDeUsuariosResposta(usuarioService.listar()) });
+export async function listar(req, res) {
+  const usuarios = await usuarioService.listar();
+  res.json({ usuarios: listaDeUsuariosResposta(usuarios) });
 }

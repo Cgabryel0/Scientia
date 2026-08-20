@@ -157,7 +157,7 @@ h2 {
   width: auto;
 }
 
-/* Etiqueta do papel do usuário */
+/* Etiqueta do tipo do usuário */
 .etiqueta {
   display: inline-block;
   padding: 0.15rem 0.6rem;
@@ -165,6 +165,7 @@ h2 {
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .etiqueta--admin {
@@ -172,7 +173,12 @@ h2 {
   color: #0b6d63;
 }
 
-.etiqueta--user {
+.etiqueta--aluno {
   background-color: rgba(31, 75, 142, 0.12);
   color: var(--primaria);
+}
+
+.etiqueta--pesquisador {
+  background-color: rgba(179, 38, 30, 0.1);
+  color: #8a4b12;
 }

@@ -18,13 +18,13 @@ function TelaDeLogin() {
   return <p>Tela de login | destino: {local.state?.destino}</p>;
 }
 
-function renderizarRotaPrivada(rolesPermitidos) {
+function renderizarRotaPrivada(tipos) {
   return render(
     <MemoryRouter initialEntries={['/privada']}>
       <Routes>
         <Route path="/login" element={<TelaDeLogin />} />
         <Route path="/sem-permissao" element={<p>Acesso negado</p>} />
-        <Route element={<RotaProtegida rolesPermitidos={rolesPermitidos} />}>
+        <Route element={<RotaProtegida tipos={tipos} />}>
           <Route path="/privada" element={<p>Conteúdo privado</p>} />
         </Route>
       </Routes>
@@ -54,18 +54,18 @@ describe('RotaProtegida', () => {
     expect(screen.getByText(/destino: \/privada/)).toBeInTheDocument();
   });
 
-  it('com sessão de USER numa rota de ADMIN, redireciona para acesso negado', () => {
-    sessaoFalsa.usuario = { nome: 'Fulano', role: 'USER' };
+  it('com sessão de aluno numa rota de admin, redireciona para acesso negado', () => {
+    sessaoFalsa.usuario = { id: 152, nome: 'Ana Souza', email: 'ana@ufape.edu.br', tipo: 'aluno', criadoEm: '2026-08-19T12:00:00.000Z' };
 
-    renderizarRotaPrivada(['ADMIN']);
+    renderizarRotaPrivada(['admin']);
 
     expect(screen.getByText(/acesso negado/i)).toBeInTheDocument();
   });
 
-  it('com sessão e papel adequado, renderiza o conteúdo da rota', () => {
-    sessaoFalsa.usuario = { nome: 'Fulana', role: 'ADMIN' };
+  it('com sessão e tipo adequado, renderiza o conteúdo da rota', () => {
+    sessaoFalsa.usuario = { id: 1, nome: 'Fulana', email: 'fulana@ufape.edu.br', tipo: 'admin', criadoEm: '2026-08-19T12:00:00.000Z' };
 
-    renderizarRotaPrivada(['ADMIN']);
+    renderizarRotaPrivada(['admin']);
 
     expect(screen.getByText(/conteúdo privado/i)).toBeInTheDocument();
   });

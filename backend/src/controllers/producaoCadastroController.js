@@ -13,7 +13,7 @@ export function cadastrar(req, res) {
     palavrasChave,
     anoPublicacao,
     arquivoOuLink,
-    criadoPorId: req.usuario.sub,
+    criadoPorId: Number(req.usuario.sub),
   });
 
   res.status(201).json({ producao: producaoResposta(producao) });
