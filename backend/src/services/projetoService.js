@@ -16,8 +16,12 @@ export async function listar(filtros) {
     STATUS_PROJETO,
     'O status deve ser planejado, em_andamento, concluido ou cancelado.',
   );
-  const idGrupo = validarInteiroOpcional(filtros.idGrupo, 'O id do grupo deve ser um número inteiro.');
-  const idArea = validarInteiroOpcional(filtros.idArea, 'O id da área deve ser um número inteiro.');
+  const idGrupo = validarInteiroOpcional(filtros.idGrupo, 'O id do grupo deve ser um número inteiro.', {
+    minimo: 1,
+  });
+  const idArea = validarInteiroOpcional(filtros.idArea, 'O id da área deve ser um número inteiro.', {
+    minimo: 1,
+  });
   const resultado = await repositorioProjetos.listar({
     busca: filtros.busca,
     status,

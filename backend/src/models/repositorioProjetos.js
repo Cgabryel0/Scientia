@@ -1,4 +1,5 @@
 import { consultar } from '../config/bd.js';
+import { montarPadraoBusca } from './buscaTextual.js';
 
 export async function listar({ busca, status, idGrupo, idArea, limite, deslocamento }) {
   const { clausula, parametros } = montarFiltros({ busca, status, idGrupo, idArea });
@@ -101,8 +102,8 @@ function montarFiltros({ busca, status, idGrupo, idArea }) {
   const parametros = [];
 
   if (busca) {
-    parametros.push(`%${busca}%`);
-    filtros.push(`pr.titulo ILIKE $${parametros.length}`);
+    parametros.push(montarPadraoBusca(busca));
+    filtros.push(`pr.titulo ILIKE $${parametros.length} ESCAPE '\\'`);
   }
 
   if (status) {

@@ -1,4 +1,5 @@
 import { consultar } from '../config/bd.js';
+import { montarPadraoBusca } from './buscaTextual.js';
 
 export async function listar({ busca, tipo, ano, idProjeto, idPesquisador, limite, deslocamento }) {
   const { clausula, parametros } = montarFiltros({ busca, tipo, ano, idProjeto, idPesquisador });
@@ -80,16 +81,16 @@ function montarFiltros({ busca, tipo, ano, idProjeto, idPesquisador }) {
   const parametros = [];
 
   if (busca) {
-    parametros.push(`%${busca}%`);
+    parametros.push(montarPadraoBusca(busca));
     filtros.push(`
       (
-        p.titulo ILIKE $${parametros.length}
+        p.titulo ILIKE $${parametros.length} ESCAPE '\\'
         OR EXISTS (
           SELECT 1
           FROM autoria a_busca
           JOIN pesquisador pe_busca ON pe_busca.id_pesquisador = a_busca.id_pesquisador
           WHERE a_busca.id_publicacao = p.id_publicacao
-            AND pe_busca.nome ILIKE $${parametros.length}
+            AND pe_busca.nome ILIKE $${parametros.length} ESCAPE '\\'
         )
       )
     `);

@@ -1,4 +1,5 @@
 import { consultar } from '../config/bd.js';
+import { montarPadraoBusca } from './buscaTextual.js';
 
 export async function listar({ busca, vinculo, limite, deslocamento }) {
   const { clausula, parametros } = montarFiltros({ busca, vinculo });
@@ -20,7 +21,7 @@ export async function listar({ busca, vinculo, limite, deslocamento }) {
         ) AS total_publicacoes
       FROM pesquisador pe
       ${clausula}
-      ORDER BY pe.nome ASC
+      ORDER BY pe.nome ASC, pe.id_pesquisador ASC
       LIMIT $${indiceLimite} OFFSET $${indiceDeslocamento}
     `,
     parametrosLista,
@@ -47,8 +48,8 @@ function montarFiltros({ busca, vinculo }) {
   const parametros = [];
 
   if (busca) {
-    parametros.push(`%${busca}%`);
-    filtros.push(`pe.nome ILIKE $${parametros.length}`);
+    parametros.push(montarPadraoBusca(busca));
+    filtros.push(`pe.nome ILIKE $${parametros.length} ESCAPE '\\'`);
   }
 
   if (vinculo) {

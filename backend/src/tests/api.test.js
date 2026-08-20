@@ -70,7 +70,7 @@ const publicacaoArtigoFixture = {
   veiculo: 'Revista Brasileira de Computação',
   projeto: { id: 3, titulo: 'Inteligência artificial aplicada ao Agreste' },
   autores: [
-    { id: 91, nome: 'Ana Souza', ordem: 1 },
+    { id: 91, nome: 'Zuleica Souza', ordem: 1 },
     { id: 104, nome: 'Bruno Lima', ordem: 2 },
   ],
 };
@@ -95,9 +95,9 @@ const grupoComputacaoFixture = {
   totalMembros: 2,
 };
 
-const pesquisadorAnaFixture = {
+const pesquisadorZuleicaFixture = {
   id: 91,
-  nome: 'Ana Souza',
+  nome: 'Zuleica Souza',
   vinculo: 'docente',
   numeroLattes: '1234567890123456',
   totalPublicacoes: 2,
@@ -492,7 +492,7 @@ describe('Acervo público', () => {
     assert.deepStrictEqual(ano.body.publicacoes[0].autores, [
       { id: 104, nome: 'Bruno Lima', ordem: 1 },
       { id: 117, nome: 'Carla Rocha', ordem: 2 },
-      { id: 91, nome: 'Ana Souza', ordem: 3 },
+      { id: 91, nome: 'Zuleica Souza', ordem: 3 },
     ]);
     assert.strictEqual(pagina.status, 200);
     assert.deepStrictEqual(
@@ -548,7 +548,7 @@ describe('Acervo público', () => {
         edital: { id: 7, nome: 'Edital Universal nº 03/2022', ano: 2022 },
         areas: [{ id: 1, nome: 'Ciência da Computação' }],
         equipe: [
-          { id: 91, nome: 'Ana Souza', papel: 'coordenador', dataEntrada: '2024-03-01' },
+          { id: 91, nome: 'Zuleica Souza', papel: 'coordenador', dataEntrada: '2024-03-01' },
           { id: 104, nome: 'Bruno Lima', papel: 'participante', dataEntrada: '2024-03-10' },
         ],
         publicacoes: [
@@ -569,6 +569,17 @@ describe('Acervo público', () => {
     assert.strictEqual(inexistente.body.mensagem, 'Projeto não encontrado.');
   });
 
+  it('/api/grupos lista grupos em ordem alfabética crescente', async () => {
+    const resposta = await request(app).get('/api/grupos');
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(
+      resposta.body.grupos.map((grupo) => grupo.nome),
+      ['Grupo de Pesquisa em Agroecologia Digital', 'Grupo de Pesquisa em Computação Aplicada'],
+    );
+    assert.deepStrictEqual(resposta.body.paginacao, { pagina: 1, porPagina: 20, total: 2 });
+  });
+
   it('/api/grupos lista grupos e retorna detalhe', async () => {
     const lista = await request(app).get('/api/grupos?busca=Computação');
     const detalhe = await request(app).get('/api/grupos/2');
@@ -586,7 +597,7 @@ describe('Acervo público', () => {
         linkDgp: 'http://dgp.cnpq.br/exemplo',
         anoCriacao: 2015,
         membros: [
-          { id: 91, nome: 'Ana Souza', papel: 'lider' },
+          { id: 91, nome: 'Zuleica Souza', papel: 'lider' },
           { id: 104, nome: 'Bruno Lima', papel: 'membro' },
         ],
         projetos: [{ id: 3, titulo: 'Inteligência artificial aplicada ao Agreste', status: 'em_andamento' }],
@@ -595,14 +606,25 @@ describe('Acervo público', () => {
   });
 
   it('/api/pesquisadores lista sem vazar email', async () => {
-    const resposta = await request(app).get('/api/pesquisadores?busca=Ana');
+    const resposta = await request(app).get('/api/pesquisadores?busca=Zuleica');
 
     assert.strictEqual(resposta.status, 200);
     assert.deepStrictEqual(resposta.body, {
-      pesquisadores: [pesquisadorAnaFixture],
+      pesquisadores: [pesquisadorZuleicaFixture],
       paginacao: { pagina: 1, porPagina: 20, total: 1 },
     });
     assert.strictEqual(Object.hasOwn(resposta.body.pesquisadores[0], 'email'), false);
+  });
+
+  it('/api/pesquisadores lista pesquisadores em ordem alfabética crescente', async () => {
+    const resposta = await request(app).get('/api/pesquisadores');
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(
+      resposta.body.pesquisadores.map((pesquisador) => pesquisador.nome),
+      ['Bruno Lima', 'Carla Rocha', 'Zuleica Souza'],
+    );
+    assert.deepStrictEqual(resposta.body.paginacao, { pagina: 1, porPagina: 20, total: 3 });
   });
 
   it('/api/areas lista áreas ordenadas por nome', async () => {

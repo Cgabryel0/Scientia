@@ -1,4 +1,5 @@
 import { consultar } from '../config/bd.js';
+import { montarPadraoBusca } from './buscaTextual.js';
 
 export async function listar({ busca, limite, deslocamento }) {
   const { clausula, parametros } = montarFiltros({ busca });
@@ -25,7 +26,7 @@ export async function listar({ busca, limite, deslocamento }) {
         ) AS total_membros
       FROM grupo_pesquisa g
       ${clausula}
-      ORDER BY g.nome_grupo ASC
+      ORDER BY g.nome_grupo ASC, g.id_grupo ASC
       LIMIT $${indiceLimite} OFFSET $${indiceDeslocamento}
     `,
     parametrosLista,
@@ -78,8 +79,8 @@ function montarFiltros({ busca }) {
   const parametros = [];
 
   if (busca) {
-    parametros.push(`%${busca}%`);
-    filtros.push(`g.nome_grupo ILIKE $${parametros.length}`);
+    parametros.push(montarPadraoBusca(busca));
+    filtros.push(`g.nome_grupo ILIKE $${parametros.length} ESCAPE '\\'`);
   }
 
   return {

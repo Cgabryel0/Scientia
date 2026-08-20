@@ -193,3 +193,5 @@ entrou na iteração anterior a esta história; a consulta abaixo completa o cic
 - [x] Registrar as rotas `/producoes` e `/producoes/cadastro` no roteamento
 - [x] Adicionar o link "Produções" no cabeçalho
 - [x] Estilizar a barra de filtros e os cards no CSS (e importar o `producoes.css`)
+
+> Observação: na 4ª iteração, o acervo migrou para o modelo relacional. No estado atual do código, esses endpoints e arquivos foram substituídos por `/api/publicacoes`, `/api/projetos` e `/api/grupos`, com as telas correspondentes.

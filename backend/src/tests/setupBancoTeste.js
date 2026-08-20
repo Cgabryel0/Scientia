@@ -23,7 +23,7 @@ const areasAcervo = [
 ];
 
 const pesquisadoresAcervo = [
-  [91, 'Ana Souza', '1234567890123456', 'ana.souza@acervo.ufape.edu.br', 'docente', 'manual'],
+  [91, 'Zuleica Souza', '1234567890123456', 'zuleica.souza@acervo.ufape.edu.br', 'docente', 'manual'],
   [104, 'Bruno Lima', '2345678901234567', 'bruno.lima@acervo.ufape.edu.br', 'discente', 'manual'],
   [117, 'Carla Rocha', '3456789012345678', 'carla.rocha@acervo.ufape.edu.br', 'externo', 'manual'],
 ];

@@ -17,10 +17,13 @@ export async function listar(filtros) {
     'O tipo deve ser artigo, capítulo ou resumo.',
   );
   const ano = validarInteiroOpcional(filtros.ano, 'O ano deve ser um número inteiro.');
-  const idProjeto = validarInteiroOpcional(filtros.idProjeto, 'O id do projeto deve ser um número inteiro.');
+  const idProjeto = validarInteiroOpcional(filtros.idProjeto, 'O id do projeto deve ser um número inteiro.', {
+    minimo: 1,
+  });
   const idPesquisador = validarInteiroOpcional(
     filtros.idPesquisador,
     'O id do pesquisador deve ser um número inteiro.',
+    { minimo: 1 },
   );
   const resultado = await repositorioPublicacoes.listar({
     busca: filtros.busca,
