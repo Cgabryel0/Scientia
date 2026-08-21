@@ -2,6 +2,7 @@ const ROTAS_PUBLICAS = [
   { metodo: 'GET', caminho: '/api/status' },
   { metodo: 'GET', caminho: '/api/areas' },
   { metodo: 'GET', caminho: '/api/cursos' },
+  { metodo: 'GET', caminho: '/api/editais' },
   { metodo: 'GET', caminho: '/api/grupos' },
   { metodo: 'GET', caminho: '/api/grupos/:id' },
   { metodo: 'GET', caminho: '/api/pesquisadores' },

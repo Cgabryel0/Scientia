@@ -159,10 +159,11 @@ function validarTiposDaPublicacao(dados) {
   const autoresInvalidos =
     dados.autores != null &&
     (!Array.isArray(dados.autores) ||
-      dados.autores.some((autor) => !autor || Array.isArray(autor) || typeof autor !== 'object'));
+      dados.autores.some((autor) => !autorEhObjeto(autor)));
   const textoAutorInvalido =
     Array.isArray(dados.autores) &&
     dados.autores.some((autor) =>
+      autorEhObjeto(autor) &&
       ['nome', 'numeroLattes', 'email', 'vinculo'].some(
         (campo) => autor[campo] != null && typeof autor[campo] !== 'string',
       ),
@@ -303,4 +304,8 @@ function normalizarTextoOpcional(valor) {
 
 function numeroValidoQuandoPresente(valor) {
   return valor == null || (typeof valor === 'number' && Number.isFinite(valor));
+}
+
+function autorEhObjeto(autor) {
+  return !!autor && !Array.isArray(autor) && typeof autor === 'object';
 }

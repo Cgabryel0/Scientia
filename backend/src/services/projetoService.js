@@ -13,6 +13,7 @@ import { resolverPesquisadorAutenticado } from './pesquisadorAutenticadoService.
 
 const STATUS_PROJETO = ['planejado', 'em_andamento', 'concluido', 'cancelado'];
 const CAMPOS_TEXTO_PROJETO = ['titulo', 'resumo', 'dataInicio', 'dataFim', 'status'];
+const TAMANHO_MAXIMO_RESUMO = 5000;
 
 export async function listar(filtros) {
   const paginacao = validarPaginacao(filtros);
@@ -147,6 +148,10 @@ function validarDadosDoProjeto(projeto) {
 
   if (!STATUS_PROJETO.includes(projeto.status)) {
     problemas.push('O status deve ser planejado, em_andamento, concluido ou cancelado.');
+  }
+
+  if (projeto.resumo !== null && projeto.resumo.length > TAMANHO_MAXIMO_RESUMO) {
+    problemas.push('O resumo deve ter no máximo 5000 caracteres.');
   }
 
   if (!dataValida(projeto.dataInicio)) {

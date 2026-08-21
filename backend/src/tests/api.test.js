@@ -403,6 +403,16 @@ describe('Autenticação e contas', () => {
     assert.strictEqual(resposta.body.mensagem, 'Email ou senha incorretos.');
   });
 
+  it('retorna mensagem em português para JSON malformado', async () => {
+    const resposta = await request(app)
+      .post('/api/publicacoes')
+      .set('Content-Type', 'application/json')
+      .send('{"titulo":');
+
+    assert.strictEqual(resposta.status, 400);
+    assert.strictEqual(resposta.body.mensagem, 'Corpo da requisição não é um JSON válido.');
+  });
+
   it('retorna perfil de aluno com curso', async () => {
     const cadastro = await cadastrar(dadosAluno());
 
@@ -684,6 +694,41 @@ describe('Acervo público', () => {
     });
   });
 
+  it('/api/editais lista editais publicamente por ano e nome', async () => {
+    await consultar(
+      `
+        INSERT INTO edital (id_edital, nome_edital, ano)
+        VALUES
+          ($1, $2, $3),
+          ($4, $5, $6),
+          ($7, $8, $9)
+      `,
+      [
+        8,
+        'Chamada Interna 01/2024',
+        2024,
+        9,
+        'Apoio a Projetos 02/2024',
+        2024,
+        10,
+        'Edital de Extensão 01/2021',
+        2021,
+      ],
+    );
+
+    const resposta = await request(app).get('/api/editais');
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(resposta.body, {
+      editais: [
+        { id: 9, nome: 'Apoio a Projetos 02/2024', ano: 2024 },
+        { id: 8, nome: 'Chamada Interna 01/2024', ano: 2024 },
+        { id: 7, nome: 'Edital Universal nº 03/2022', ano: 2022 },
+        { id: 10, nome: 'Edital de Extensão 01/2021', ano: 2021 },
+      ],
+    });
+  });
+
 });
 
 describe('Cadastro do acervo', () => {
@@ -914,21 +959,41 @@ describe('Cadastro do acervo', () => {
 
   it('retorna 400 para campos malformados de publicação sem gerar 500', async () => {
     const token = await tokenPesquisadorTeste();
+    const antes = await consultar('SELECT COUNT(*)::int AS total FROM publicacao');
+    const base = {
+      titulo: 'Publicação malformada',
+      tipo: 'artigo',
+      ano: 2024,
+      veiculo: 'Revista',
+      idProjeto: 3,
+      autores: [{ id: 91 }],
+    };
 
-    const resposta = await request(app)
-      .post('/api/publicacoes')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
+    const casos = [
+      {
         titulo: { texto: 'inválido' },
         tipo: 'artigo',
         ano: '2024',
         veiculo: 'Revista',
         idProjeto: 3,
         autores: [{ id: '91' }],
-      });
+      },
+      { ...base, autores: [null] },
+      { ...base, autores: [{ id: 91 }, null] },
+    ];
 
-    assert.strictEqual(resposta.status, 400);
-    assert.strictEqual(resposta.body.mensagem, 'Campos da publicação inválidos.');
+    for (const payload of casos) {
+      const resposta = await request(app)
+        .post('/api/publicacoes')
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload);
+
+      assert.strictEqual(resposta.status, 400);
+      assert.strictEqual(resposta.body.mensagem, 'Campos da publicação inválidos.');
+    }
+
+    const depois = await consultar('SELECT COUNT(*)::int AS total FROM publicacao');
+    assert.strictEqual(depois.rows[0].total, antes.rows[0].total);
   });
 
   it('retorna 409 para DOI repetido', async () => {
@@ -1052,6 +1117,7 @@ describe('Cadastro do acervo', () => {
     const casos = [
       [{ ...base, titulo: '' }, 'Informe o título.'],
       [{ ...base, titulo: 'x'.repeat(256) }, 'O título deve ter no máximo 255 caracteres.'],
+      [{ ...base, resumo: 'x'.repeat(5001) }, 'O resumo deve ter no máximo 5000 caracteres.'],
       [{ ...base, status: 'ativo' }, 'O status deve ser planejado, em_andamento, concluido ou cancelado.'],
       [{ ...base, dataInicio: '01-01-2024' }, 'Informe a data de início no formato YYYY-MM-DD.'],
       [{ ...base, dataFim: '2023-12-31' }, 'A data de fim não pode ser anterior à de início.'],

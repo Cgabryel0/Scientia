@@ -5,7 +5,15 @@ export function rotaNaoEncontrada(req, res, next) {
 }
 
 export function tratadorDeErros(erro, req, res, next) {
-  const status = erro.status ?? 500;
+  const status = erro.status ?? erro.statusCode ?? 500;
+
+  if (erro.type === 'entity.parse.failed' && erro instanceof SyntaxError && status === 400) {
+    return res.status(400).json({ mensagem: 'Corpo da requisição não é um JSON válido.' });
+  }
+
+  if (erro.type === 'entity.too.large' && status === 413) {
+    return res.status(413).json({ mensagem: 'Corpo da requisição excede o tamanho máximo permitido.' });
+  }
 
   // Erro sem status é falha nossa: registra no console e responde algo genérico,
   // porque a mensagem original pode expor detalhes internos.
