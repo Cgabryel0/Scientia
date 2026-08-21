@@ -10,6 +10,12 @@ vi.mock('../servicos/publicacaoService.js', () => ({
   listar: vi.fn(),
 }));
 
+const sessaoFalsa = { usuario: null };
+
+vi.mock('../contexto/AuthContext.jsx', () => ({
+  useAuth: () => sessaoFalsa,
+}));
+
 const [publicacaoDaSpec] = RESPOSTA_PUBLICACOES.publicacoes;
 
 const publicacaoComAutoresEmbaralhados = {
@@ -35,6 +41,7 @@ function renderizarTela() {
 
 describe('Tela de publicações', () => {
   beforeEach(() => {
+    sessaoFalsa.usuario = null;
     vi.useFakeTimers();
     publicacaoService.listar.mockResolvedValue(RESPOSTA_PUBLICACOES);
   });
@@ -162,5 +169,30 @@ describe('Tela de publicações', () => {
     await act(async () => {});
 
     expect(screen.getByText(/API está no ar/i)).toBeInTheDocument();
+  });
+
+  it('sem sessão ou com conta de aluno, não oferece o atalho de cadastro', async () => {
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.queryByRole('link', { name: /cadastrar publicação/i })).not.toBeInTheDocument();
+
+    sessaoFalsa.usuario = { id: 152, nome: 'Ana Souza', tipo: 'aluno' };
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.queryByRole('link', { name: /cadastrar publicação/i })).not.toBeInTheDocument();
+  });
+
+  it.each(['pesquisador', 'admin'])('a conta %s ganha o atalho de cadastro', async (tipo) => {
+    sessaoFalsa.usuario = { id: 7, nome: 'Ana Souza', tipo };
+
+    renderizarTela();
+    await act(async () => {});
+
+    expect(screen.getByRole('link', { name: /cadastrar publicação/i })).toHaveAttribute(
+      'href',
+      '/publicacoes/cadastro',
+    );
   });
 });

@@ -14,3 +14,8 @@ export async function detalhar(req, res) {
   const grupo = await grupoService.buscarPorId(req.params.id);
   res.json({ grupo: grupoDetalheResposta(grupo) });
 }
+
+export async function cadastrar(req, res) {
+  const grupo = await grupoService.cadastrar(req.body ?? {}, req.usuario);
+  res.status(201).json({ grupo: grupoDetalheResposta(grupo) });
+}

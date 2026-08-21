@@ -7,3 +7,7 @@ export function listar(filtros) {
 export function buscarPorId(id) {
   return requisitar(`/grupos/${id}`);
 }
+
+export function cadastrar(dados, token) {
+  return requisitar('/grupos', { metodo: 'POST', corpo: dados, token });
+}

@@ -61,6 +61,44 @@ export async function buscarPorId(id) {
   };
 }
 
+export async function existe(id, executor) {
+  const { rows } = await executarConsulta(
+    executor,
+    `
+      SELECT 1
+      FROM grupo_pesquisa
+      WHERE id_grupo = $1
+      LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows.length > 0;
+}
+
+export async function criar(executor, { nome, linkDgp, anoCriacao }) {
+  const { rows } = await executor.query(
+    `
+      INSERT INTO grupo_pesquisa (nome_grupo, link_dgp, ano_criacao)
+      VALUES ($1, $2, $3)
+      RETURNING id_grupo
+    `,
+    [nome, linkDgp, anoCriacao],
+  );
+
+  return rows[0].id_grupo;
+}
+
+export async function criarMembro(executor, { idGrupo, idPesquisador, papel }) {
+  await executor.query(
+    `
+      INSERT INTO membro (id_pesquisador, id_grupo, papel_grupo)
+      VALUES ($1, $2, $3)
+    `,
+    [idPesquisador, idGrupo, papel],
+  );
+}
+
 async function contar(clausula, parametros) {
   const { rows } = await consultar(
     `
@@ -154,4 +192,12 @@ function mapearGrupoDetalhe(linha) {
     membros: [],
     projetos: [],
   };
+}
+
+function executarConsulta(executor, sql, parametros) {
+  if (executor) {
+    return executor.query(sql, parametros);
+  }
+
+  return consultar(sql, parametros);
 }

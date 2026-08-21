@@ -63,6 +63,29 @@ export async function buscarPorId(id) {
   return publicacao;
 }
 
+export async function criar(executor, { titulo, tipo, ano, doi, veiculo, idProjeto }) {
+  const { rows } = await executor.query(
+    `
+      INSERT INTO publicacao (id_projeto, tipo, ano, doi, veiculo, titulo)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id_publicacao
+    `,
+    [idProjeto, tipo, ano, doi, veiculo, titulo],
+  );
+
+  return rows[0].id_publicacao;
+}
+
+export async function criarAutoria(executor, { idPublicacao, idPesquisador, ordem }) {
+  await executor.query(
+    `
+      INSERT INTO autoria (id_pesquisador, id_publicacao, ordem)
+      VALUES ($1, $2, $3)
+    `,
+    [idPesquisador, idPublicacao, ordem],
+  );
+}
+
 async function contar(clausula, parametros) {
   const { rows } = await consultar(
     `

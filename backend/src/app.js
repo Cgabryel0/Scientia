@@ -7,6 +7,7 @@ import { rotaNaoEncontrada, tratadorDeErros } from './middlewares/erros.js';
 import areaRoutes from './routes/areaRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cursoRoutes from './routes/cursoRoutes.js';
+import editalRoutes from './routes/editalRoutes.js';
 import grupoRoutes from './routes/grupoRoutes.js';
 import pesquisadorConsultaRoutes from './routes/pesquisadorConsultaRoutes.js';
 import projetoRoutes from './routes/projetoRoutes.js';
@@ -25,6 +26,7 @@ export function criarApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/areas', areaRoutes);
   app.use('/api/cursos', cursoRoutes);
+  app.use('/api/editais', editalRoutes);
   app.use('/api/grupos', grupoRoutes);
   app.use('/api/pesquisadores', pesquisadorConsultaRoutes);
   app.use('/api/projetos', projetoRoutes);

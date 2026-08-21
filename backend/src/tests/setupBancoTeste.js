@@ -237,6 +237,23 @@ export async function popularCenarioAcervoTeste() {
       `,
       [91, 1, 1, 104, 1, 2, 104, 2, 1, 117, 2, 2, 91, 2, 3, 117, 3, 1],
     );
+
+    await pool.query("SELECT setval(pg_get_serial_sequence('edital', 'id_edital'), (SELECT MAX(id_edital) FROM edital))");
+    await pool.query(
+      "SELECT setval(pg_get_serial_sequence('grupo_pesquisa', 'id_grupo'), (SELECT MAX(id_grupo) FROM grupo_pesquisa))",
+    );
+    await pool.query(
+      "SELECT setval(pg_get_serial_sequence('area_conhecimento', 'id_area'), (SELECT MAX(id_area) FROM area_conhecimento))",
+    );
+    await pool.query(
+      "SELECT setval(pg_get_serial_sequence('pesquisador', 'id_pesquisador'), (SELECT MAX(id_pesquisador) FROM pesquisador))",
+    );
+    await pool.query(
+      "SELECT setval(pg_get_serial_sequence('projeto_pesquisa', 'id_projeto'), (SELECT MAX(id_projeto) FROM projeto_pesquisa))",
+    );
+    await pool.query(
+      "SELECT setval(pg_get_serial_sequence('publicacao', 'id_publicacao'), (SELECT MAX(id_publicacao) FROM publicacao))",
+    );
   } finally {
     await pool.end();
   }

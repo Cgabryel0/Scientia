@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './componentes/Layout.jsx';
 import { RotaProtegida } from './componentes/RotaProtegida.jsx';
 import { Cadastro } from './paginas/Cadastro.jsx';
+import { CadastroProjeto } from './paginas/CadastroProjeto.jsx';
+import { CadastroPublicacao } from './paginas/CadastroPublicacao.jsx';
 import { DetalheGrupo } from './paginas/DetalheGrupo.jsx';
 import { DetalheProjeto } from './paginas/DetalheProjeto.jsx';
 import { Grupos } from './paginas/Grupos.jsx';
@@ -33,6 +35,11 @@ export function App() {
         <Route element={<Layout />}>
           <Route path="/painel" element={<Painel />} />
           <Route path="/sem-permissao" element={<SemPermissao />} />
+
+          <Route element={<RotaProtegida tipos={['pesquisador', 'admin']} />}>
+            <Route path="/publicacoes/cadastro" element={<CadastroPublicacao />} />
+            <Route path="/projetos/cadastro" element={<CadastroProjeto />} />
+          </Route>
 
           <Route element={<RotaProtegida tipos={['admin']} />}>
             <Route path="/usuarios" element={<Usuarios />} />

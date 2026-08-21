@@ -2,10 +2,18 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Paginacao } from '../componentes/Paginacao.jsx';
+import { useAuth } from '../contexto/AuthContext.jsx';
 import * as publicacaoService from '../servicos/publicacaoService.js';
-import { nomesDosAutores, POR_PAGINA, ROTULOS_TIPO } from '../utils/acervo.js';
+import {
+  nomesDosAutores,
+  podeCadastrarNoAcervo,
+  POR_PAGINA,
+  ROTULOS_TIPO,
+} from '../utils/acervo.js';
 
 export function Publicacoes() {
+  const { usuario } = useAuth();
+
   const [publicacoes, setPublicacoes] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
   const [erro, setErro] = useState('');
@@ -77,6 +85,12 @@ export function Publicacoes() {
             Consulte as publicações produzidas pelos projetos de pesquisa do BCC.
           </p>
         </div>
+
+        {podeCadastrarNoAcervo(usuario) && (
+          <Link to="/publicacoes/cadastro" className="botao botao--primario botao--compacto">
+            Cadastrar publicação
+          </Link>
+        )}
       </div>
 
       <form className="filtros-acervo" onSubmit={(evento) => evento.preventDefault()}>
