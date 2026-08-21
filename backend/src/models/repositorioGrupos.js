@@ -118,7 +118,7 @@ function montarFiltros({ busca }) {
 
   if (busca) {
     parametros.push(montarPadraoBusca(busca));
-    filtros.push(`g.nome_grupo ILIKE $${parametros.length} ESCAPE '\\'`);
+    filtros.push(String.raw`g.nome_grupo ILIKE $${parametros.length} ESCAPE '\'`);
   }
 
   return {

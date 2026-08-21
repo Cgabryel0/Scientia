@@ -103,9 +103,9 @@ export async function cadastrar(dados, usuario) {
     });
 
     return buscarPorId(idProjeto);
-  } catch (erro) {
-    tratarConflitoProjeto(erro);
-    throw erro;
+  } catch (err) {
+    tratarConflitoProjeto(err);
+    throw err;
   }
 }
 

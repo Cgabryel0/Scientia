@@ -189,7 +189,7 @@ function montarFiltros({ busca, status, idGrupo, idArea }) {
 
   if (busca) {
     parametros.push(montarPadraoBusca(busca));
-    filtros.push(`pr.titulo ILIKE $${parametros.length} ESCAPE '\\'`);
+    filtros.push(String.raw`pr.titulo ILIKE $${parametros.length} ESCAPE '\'`);
   }
 
   if (status) {

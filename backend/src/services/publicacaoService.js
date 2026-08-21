@@ -4,6 +4,7 @@ import { FORMATO_EMAIL } from '../models/formatoEmail.js';
 import * as repositorioPesquisadores from '../models/repositorioPesquisadores.js';
 import * as repositorioProjetos from '../models/repositorioProjetos.js';
 import * as repositorioPublicacoes from '../models/repositorioPublicacoes.js';
+import { VINCULOS_PESQUISADOR } from '../models/vinculosPesquisador.js';
 import {
   POSTGRES_INTEGER_MAXIMO,
   validarEnumOpcional,
@@ -14,7 +15,6 @@ import {
 import { resolverPesquisadorAutenticado } from './pesquisadorAutenticadoService.js';
 
 const TIPOS_PUBLICACAO = ['artigo', 'capitulo', 'resumo'];
-const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
 const CAMPOS_TEXTO_PUBLICACAO = ['titulo', 'tipo', 'doi', 'veiculo'];
 
 export async function listar(filtros) {
@@ -93,9 +93,9 @@ export async function cadastrar(dados, usuario) {
     });
 
     return buscarPorId(idPublicacao);
-  } catch (erro) {
-    tratarConflitoUnicoPublicacao(erro);
-    throw erro;
+  } catch (err) {
+    tratarConflitoUnicoPublicacao(err);
+    throw err;
   }
 }
 
@@ -243,48 +243,70 @@ function validarAutores(autores, problemas) {
   const numerosLattes = new Set();
 
   for (const autor of autores) {
-    const ehExistente = autor.id !== undefined;
-    const temDadosNovos = Boolean(autor.nome || autor.numeroLattes || autor.vinculo);
-
-    if (ehExistente === temDadosNovos) {
-      problemas.push('Informe um autor existente ou os dados de um autor novo.');
-      continue;
-    }
-
-    if (ehExistente) {
-      if (!Number.isInteger(autor.id) || autor.id < 1 || autor.id > POSTGRES_INTEGER_MAXIMO) {
-        problemas.push('Informe um autor existente ou os dados de um autor novo.');
-      }
-      continue;
-    }
-
-    if (!autor.nome || !autor.numeroLattes || !VINCULOS_PESQUISADOR.includes(autor.vinculo)) {
-      problemas.push('Informe um autor existente ou os dados de um autor novo.');
-      continue;
-    }
-
-    if (autor.nome.length > 150) {
-      problemas.push('O nome do autor deve ter no máximo 150 caracteres.');
-    }
-
-    if (autor.numeroLattes.length > 50) {
-      problemas.push('O número Lattes deve ter no máximo 50 caracteres.');
-    }
-
-    if (autor.email && !FORMATO_EMAIL.test(autor.email)) {
-      problemas.push('Informe um email válido para o autor novo.');
-    }
-
-    if (autor.email.length > 150) {
-      problemas.push('O email do autor deve ter no máximo 150 caracteres.');
-    }
-
-    if (numerosLattes.has(autor.numeroLattes)) {
-      problemas.push('Não repita o mesmo autor na lista.');
-    }
-
-    numerosLattes.add(autor.numeroLattes);
+    validarAutor(autor, numerosLattes, problemas);
   }
+}
+
+function validarAutor(autor, numerosLattes, problemas) {
+  const ehExistente = autor.id !== undefined;
+  const temDadosNovos = Boolean(autor.nome || autor.numeroLattes || autor.vinculo);
+
+  if (ehExistente === temDadosNovos) {
+    problemas.push('Informe um autor existente ou os dados de um autor novo.');
+    return;
+  }
+
+  if (ehExistente) {
+    validarAutorExistente(autor, problemas);
+    return;
+  }
+
+  validarAutorNovo(autor, numerosLattes, problemas);
+}
+
+function validarAutorExistente(autor, problemas) {
+  if (!Number.isInteger(autor.id) || autor.id < 1 || autor.id > POSTGRES_INTEGER_MAXIMO) {
+    problemas.push('Informe um autor existente ou os dados de um autor novo.');
+  }
+}
+
+function validarAutorNovo(autor, numerosLattes, problemas) {
+  if (!autor.nome || !autor.numeroLattes || !VINCULOS_PESQUISADOR.has(autor.vinculo)) {
+    problemas.push('Informe um autor existente ou os dados de um autor novo.');
+    return;
+  }
+
+  validarComprimentosDoAutor(autor, problemas);
+  validarEmailDoAutor(autor, problemas);
+  validarLattesRepetido(autor, numerosLattes, problemas);
+}
+
+function validarComprimentosDoAutor(autor, problemas) {
+  if (autor.nome.length > 150) {
+    problemas.push('O nome do autor deve ter no máximo 150 caracteres.');
+  }
+
+  if (autor.numeroLattes.length > 50) {
+    problemas.push('O número Lattes deve ter no máximo 50 caracteres.');
+  }
+}
+
+function validarEmailDoAutor(autor, problemas) {
+  if (autor.email && !FORMATO_EMAIL.test(autor.email)) {
+    problemas.push('Informe um email válido para o autor novo.');
+  }
+
+  if (autor.email.length > 150) {
+    problemas.push('O email do autor deve ter no máximo 150 caracteres.');
+  }
+}
+
+function validarLattesRepetido(autor, numerosLattes, problemas) {
+  if (numerosLattes.has(autor.numeroLattes)) {
+    problemas.push('Não repita o mesmo autor na lista.');
+  }
+
+  numerosLattes.add(autor.numeroLattes);
 }
 
 function tratarConflitoUnicoPublicacao(erro) {

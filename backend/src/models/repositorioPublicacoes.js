@@ -105,15 +105,15 @@ function montarFiltros({ busca, tipo, ano, idProjeto, idPesquisador }) {
 
   if (busca) {
     parametros.push(montarPadraoBusca(busca));
-    filtros.push(`
+    filtros.push(String.raw`
       (
-        p.titulo ILIKE $${parametros.length} ESCAPE '\\'
+        p.titulo ILIKE $${parametros.length} ESCAPE '\'
         OR EXISTS (
           SELECT 1
           FROM autoria a_busca
           JOIN pesquisador pe_busca ON pe_busca.id_pesquisador = a_busca.id_pesquisador
           WHERE a_busca.id_publicacao = p.id_publicacao
-            AND pe_busca.nome ILIKE $${parametros.length} ESCAPE '\\'
+            AND pe_busca.nome ILIKE $${parametros.length} ESCAPE '\'
         )
       )
     `);

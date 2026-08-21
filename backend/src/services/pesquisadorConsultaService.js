@@ -1,13 +1,12 @@
 import * as repositorioPesquisadores from '../models/repositorioPesquisadores.js';
+import { LISTA_VINCULOS_PESQUISADOR } from '../models/vinculosPesquisador.js';
 import { validarEnumOpcional, validarPaginacao } from './consultaParametrosService.js';
-
-const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
 
 export async function listar(filtros) {
   const paginacao = validarPaginacao(filtros);
   const vinculo = validarEnumOpcional(
     filtros.vinculo,
-    VINCULOS_PESQUISADOR,
+    LISTA_VINCULOS_PESQUISADOR,
     'O vínculo deve ser docente, discente ou externo.',
   );
   const resultado = await repositorioPesquisadores.listar({

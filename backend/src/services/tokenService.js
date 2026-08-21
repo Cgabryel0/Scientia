@@ -24,8 +24,8 @@ export function validarToken(token) {
   let conteudo;
   try {
     conteudo = jwt.verify(token, JWT_SECRET);
-  } catch (erro) {
-    const expirou = erro.name === 'TokenExpiredError';
+  } catch (err) {
+    const expirou = err.name === 'TokenExpiredError';
     throw new ErroHttp(401, expirou ? 'Sua sessão expirou, entre novamente.' : 'Token inválido.');
   }
 
