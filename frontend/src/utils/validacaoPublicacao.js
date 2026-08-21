@@ -3,6 +3,8 @@ import { ROTULOS_TIPO, ROTULOS_VINCULO } from './acervo.js';
 export const ANO_MINIMO = 1950;
 export const ANO_MAXIMO = 2100;
 
+export const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const TIPOS_PUBLICACAO = Object.keys(ROTULOS_TIPO);
 const VINCULOS_PESQUISADOR = Object.keys(ROTULOS_VINCULO);
 
@@ -88,6 +90,16 @@ function validarAutores(autores, problemas) {
 
     if (numeroLattes.length > 50) {
       problemas.push('O número Lattes deve ter no máximo 50 caracteres.');
+    }
+
+    const email = texto(autor.email);
+
+    if (email && !FORMATO_EMAIL.test(email)) {
+      problemas.push('Informe um email válido para o autor novo.');
+    }
+
+    if (email.length > 150) {
+      problemas.push('O email do autor deve ter no máximo 150 caracteres.');
     }
 
     if (identificadores.has(`lattes:${numeroLattes}`)) {

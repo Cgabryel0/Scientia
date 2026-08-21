@@ -64,6 +64,10 @@ export const RESPOSTA_GRUPOS = {
   paginacao: { pagina: 1, porPagina: 20, total: 30 },
 };
 
+export const RESPOSTA_EDITAIS = {
+  editais: [{ id: 7, nome: 'Edital Universal nº 03/2022', ano: 2022 }],
+};
+
 export const RESPOSTA_GRUPO = {
   grupo: {
     id: 2,

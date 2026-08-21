@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { SeletorGrupo } from '../componentes/SeletorGrupo.jsx';
 import { useAuth } from '../contexto/AuthContext.jsx';
 import * as areaService from '../servicos/areaService.js';
-import * as grupoService from '../servicos/grupoService.js';
+import * as editalService from '../servicos/editalService.js';
 import * as projetoService from '../servicos/projetoService.js';
 import { ROTULOS_STATUS } from '../utils/acervo.js';
 import { validarProjeto } from '../utils/validacaoProjeto.js';
@@ -14,7 +15,7 @@ const DADOS_INICIAIS = {
   dataInicio: '',
   dataFim: '',
   status: 'em_andamento',
-  idGrupo: '',
+  idEdital: '',
 };
 
 export function CadastroProjeto() {
@@ -22,23 +23,24 @@ export function CadastroProjeto() {
   const navegar = useNavigate();
 
   const [dados, setDados] = useState(DADOS_INICIAIS);
-  const [grupos, setGrupos] = useState([]);
+  const [idGrupo, setIdGrupo] = useState(null);
   const [areas, setAreas] = useState([]);
   const [areasEscolhidas, setAreasEscolhidas] = useState([]);
+  const [editais, setEditais] = useState([]);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     let atual = true;
 
-    grupoService
-      .listar({ porPagina: 100 })
-      .then((resposta) => atual && setGrupos(resposta.grupos))
-      .catch(() => {});
-
     areaService
       .listar()
       .then((resposta) => atual && setAreas(resposta.areas))
+      .catch(() => {});
+
+    editalService
+      .listar()
+      .then((resposta) => atual && setEditais(resposta.editais))
       .catch(() => {});
 
     return () => {
@@ -68,8 +70,9 @@ export function CadastroProjeto() {
       dataInicio: dados.dataInicio,
       dataFim: dados.dataFim || null,
       status: dados.status,
-      idGrupo: dados.idGrupo ? Number(dados.idGrupo) : null,
+      idGrupo,
       areas: areasEscolhidas,
+      ...(dados.idEdital ? { idEdital: Number(dados.idEdital) } : {}),
     };
 
     const problemas = validarProjeto(corpo);
@@ -141,30 +144,30 @@ export function CadastroProjeto() {
           </label>
         </div>
 
-        <div className="formulario-acervo__linha">
-          <label className="campo">
-            <span>Situação</span>
-            <select name="status" value={dados.status} onChange={alterar}>
-              {Object.entries(ROTULOS_STATUS).map(([valor, rotulo]) => (
-                <option key={valor} value={valor}>
-                  {rotulo}
-                </option>
-              ))}
-            </select>
-          </label>
+        <label className="campo">
+          <span>Situação</span>
+          <select name="status" value={dados.status} onChange={alterar}>
+            {Object.entries(ROTULOS_STATUS).map(([valor, rotulo]) => (
+              <option key={valor} value={valor}>
+                {rotulo}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          <label className="campo">
-            <span>Grupo de pesquisa</span>
-            <select name="idGrupo" value={dados.idGrupo} onChange={alterar}>
-              <option value="">Selecione um grupo</option>
-              {grupos.map((grupo) => (
-                <option key={grupo.id} value={grupo.id}>
-                  {grupo.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <SeletorGrupo aoSelecionar={setIdGrupo} />
+
+        <label className="campo">
+          <span>Edital (opcional)</span>
+          <select name="idEdital" value={dados.idEdital} onChange={alterar}>
+            <option value="">Sem edital</option>
+            {editais.map((edital) => (
+              <option key={edital.id} value={edital.id}>
+                {edital.nome} ({edital.ano})
+              </option>
+            ))}
+          </select>
+        </label>
 
         <fieldset className="selecao-areas">
           <legend>Áreas do conhecimento (opcional)</legend>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import * as pesquisadorService from '../servicos/pesquisadorService.js';
 import { ROTULOS_VINCULO } from '../utils/acervo.js';
+import { FORMATO_EMAIL } from '../utils/validacaoPublicacao.js';
 
 const RESULTADOS_POR_BUSCA = 10;
 
@@ -73,9 +74,20 @@ export function AutoresPesquisadorInput({ aoAlterar }) {
   function adicionarNovo() {
     const nome = autorNovo.nome.trim();
     const numeroLattes = autorNovo.numeroLattes.trim();
+    const email = autorNovo.email.trim();
 
     if (!nome || !numeroLattes) {
       setAviso('Informe o nome e o número Lattes do autor novo.');
+      return;
+    }
+
+    if (email && !FORMATO_EMAIL.test(email)) {
+      setAviso('Informe um email válido para o autor novo.');
+      return;
+    }
+
+    if (email.length > 150) {
+      setAviso('O email do autor deve ter no máximo 150 caracteres.');
       return;
     }
 
@@ -93,7 +105,7 @@ export function AutoresPesquisadorInput({ aoAlterar }) {
         nome,
         numeroLattes,
         vinculo: autorNovo.vinculo,
-        email: autorNovo.email.trim(),
+        email,
         novo: true,
       },
     ]);

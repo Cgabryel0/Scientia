@@ -25,12 +25,16 @@ async function buscar(termo) {
   });
 }
 
-async function preencherAutorNovo({ nome, numeroLattes, vinculo }) {
+async function preencherAutorNovo({ nome, numeroLattes, vinculo, email }) {
   fireEvent.click(screen.getByRole('button', { name: /cadastrar um autor que ainda não está/i }));
 
   fireEvent.change(screen.getByLabelText(/nome do autor/i), { target: { value: nome } });
   fireEvent.change(screen.getByLabelText(/número lattes/i), { target: { value: numeroLattes } });
   fireEvent.change(screen.getByLabelText(/vínculo/i), { target: { value: vinculo } });
+
+  if (email !== undefined) {
+    fireEvent.change(screen.getByLabelText(/e-mail/i), { target: { value: email } });
+  }
 
   fireEvent.click(screen.getByRole('button', { name: /adicionar autor novo/i }));
   await act(async () => {});
@@ -179,6 +183,45 @@ describe('Editor de autores', () => {
 
     expect(screen.getByText('Informe o nome e o número Lattes do autor novo.')).toBeInTheDocument();
     expect(aoAlterar).not.toHaveBeenCalled();
+  });
+
+  it('autor novo com e-mail malformado é recusado antes de ir ao backend', async () => {
+    renderizarEditor();
+    await act(async () => {});
+
+    await preencherAutorNovo({ ...autorNovo, email: 'bruno-arroba-errado' });
+
+    expect(
+      screen.getByText('Informe um email válido para o autor novo.'),
+    ).toBeInTheDocument();
+    expect(aoAlterar).not.toHaveBeenCalled();
+    expect(screen.getByText('Nenhum autor escolhido até agora.')).toBeInTheDocument();
+  });
+
+  it('autor novo com e-mail longo demais é recusado antes de ir ao backend', async () => {
+    renderizarEditor();
+    await act(async () => {});
+
+    await preencherAutorNovo({
+      ...autorNovo,
+      email: `${'a'.repeat(140)}@ufape.edu.br`,
+    });
+
+    expect(
+      screen.getByText('O email do autor deve ter no máximo 150 caracteres.'),
+    ).toBeInTheDocument();
+    expect(aoAlterar).not.toHaveBeenCalled();
+  });
+
+  it('autor novo com e-mail válido entra na lista com o e-mail informado', async () => {
+    renderizarEditor();
+    await act(async () => {});
+
+    await preencherAutorNovo({ ...autorNovo, email: 'bruno.lima@ufape.edu.br' });
+
+    expect(aoAlterar).toHaveBeenLastCalledWith([
+      { ...autorNovo, email: 'bruno.lima@ufape.edu.br' },
+    ]);
   });
 
   it('sem resultados, sugere cadastrar o autor à mão', async () => {

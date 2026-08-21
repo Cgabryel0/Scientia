@@ -36,6 +36,14 @@ export function validarProjeto(projeto) {
   }
 
   if (
+    projeto.idEdital !== undefined &&
+    projeto.idEdital !== null &&
+    (!Number.isInteger(projeto.idEdital) || projeto.idEdital < 1)
+  ) {
+    problemas.push('Informe um edital válido.');
+  }
+
+  if (
     !Array.isArray(projeto.areas) ||
     projeto.areas.some((idArea) => !Number.isInteger(idArea) || idArea < 1)
   ) {

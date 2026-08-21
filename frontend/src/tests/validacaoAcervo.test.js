@@ -83,6 +83,33 @@ describe('Validação de publicação no cliente', () => {
     ).toContain('Informe um autor existente ou os dados de um autor novo.');
   });
 
+  it('recusa e-mail malformado no autor novo', () => {
+    expect(
+      validarPublicacao({
+        ...CORPO_NOVA_PUBLICACAO,
+        autores: [autorExistente, { ...autorNovo, email: 'lattes-arroba-errado' }],
+      }),
+    ).toContain('Informe um email válido para o autor novo.');
+  });
+
+  it('recusa e-mail do autor novo com mais de 150 caracteres', () => {
+    expect(
+      validarPublicacao({
+        ...CORPO_NOVA_PUBLICACAO,
+        autores: [autorExistente, { ...autorNovo, email: `${'a'.repeat(140)}@ufape.edu.br` }],
+      }),
+    ).toContain('O email do autor deve ter no máximo 150 caracteres.');
+  });
+
+  it('aceita autor novo sem e-mail ou com e-mail válido', () => {
+    expect(
+      validarPublicacao({
+        ...CORPO_NOVA_PUBLICACAO,
+        autores: [autorExistente, { ...autorNovo, email: 'bruno.lima@ufape.edu.br' }],
+      }),
+    ).toEqual([]);
+  });
+
   it('recusa o mesmo pesquisador repetido, por id ou por Lattes', () => {
     expect(
       validarPublicacao({ ...CORPO_NOVA_PUBLICACAO, autores: [autorExistente, autorExistente] }),
