@@ -3,6 +3,9 @@
 ## Integrantes
 [Lucas Feitoza](https://github.com/hazdriel) | [Carlos Gabyrel Espianhara](https://github.com/cgabryel0) | [Laura Vitória Mendes](https://github.com/l4uramendes)
 
+Heitor Calado Duque de Araújo integra o grupo apenas na disciplina de Banco de
+Dados, por isso não aparece nos commits do restante do projeto.
+
 ## Sobre o Projeto
 Projeto para implementação de um hub de produção científica do curso de __Bacharelado em Ciência da Computação (BCC)__ da UFAPE, desenvolvido para a disciplina de __Engenharia de Software__ ministrada pela Professora [Thaís Burity](https://github.com/taburity), referente ao período de 2026.1.
 
@@ -22,94 +25,30 @@ O sistema deve permitir o cadastro e a consulta das produções científicas do 
 * Banco relacional, versão 16, rodando em contêiner
 
 ## Status do Projeto
-Em desenvolvimento - segunda iteração (controle de acesso) concluída.
+Em desenvolvimento - quarta iteração em andamento.
 
-## Segunda iteração: controle de acesso
-Esta iteração implementou cadastro, login e logout com JWT, além da autorização
-pelos papéis `ADMIN` e `USER`. As histórias de usuário, os critérios de aceitação
-e a quebra em tarefas estão em [docs/historias-de-usuario.md](docs/historias-de-usuario.md).
+O modelo relacional (`database/`) está implementado de ponta a ponta: contas,
+consulta e cadastro do acervo (publicações, projetos, grupos de pesquisa,
+pesquisadores, áreas de conhecimento e editais) já lêem e escrevem direto no
+PostgreSQL, tanto pela API quanto pelas telas do frontend.
 
-Como funciona, em resumo:
+O banco também tem as tabelas `vaga` e `candidatura`, usadas no povoamento e no
+diagrama lógico, mas essa parte do domínio ainda não tem endpoint na API nem
+tela no frontend — não faz parte do que está entregue até aqui.
 
-* No cadastro e no login o backend devolve um **token JWT** assinado e com validade.
-* O frontend guarda esse token e o envia no cabeçalho `Authorization` de toda
-  requisição a rota protegida.
-* Um **middleware de autenticação** intercepta todas as requisições da API. Só as
-  rotas listadas como públicas em `backend/src/config/seguranca.js` passam sem token.
-* Um **middleware de autorização** trava as rotas que exigem um papel específico.
-* No logout o token entra numa lista de encerrados e passa a ser recusado, então
-  não adianta reaproveitar um token copiado antes de sair.
-* No frontend, o componente `RotaProtegida` funciona como **guard**: sem sessão
-  manda para o login, e sem o papel exigido manda para a tela de acesso negado.
+Nesta quarta iteração o foco é configurar integração contínua e implantação do
+backend, descritas nas seções abaixo.
 
-### Endpoints da API
-
-| Método | Rota                  | Acesso            |
-| ------ | --------------------- | ----------------- |
-| GET    | `/api/status`         | Público           |
-| POST   | `/api/auth/cadastro`  | Público           |
-| POST   | `/api/auth/login`     | Público           |
-| POST   | `/api/auth/logout`    | Autenticado       |
-| GET    | `/api/auth/perfil`    | Autenticado       |
-| GET    | `/api/usuarios`       | Somente `ADMIN`   |
-
-## Executando o projeto
-Precisa do [Node.js](https://nodejs.org/) 20 ou superior e do
+## Como Executar
+Precisa do [Node.js](https://nodejs.org/) 22 ou superior e do
 [Docker](https://www.docker.com/) para o banco.
 
 ### Banco de dados
 ```bash
 docker compose up -d
 ```
-Sobe em `localhost:5432`, já criado e povoado.
-
-### Backend
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run dev
-```
-Disponível em `http://localhost:3000`.
-
-Quando o servidor sobe, ele cria a conta de administrador definida no `.env`
-(por padrão `admin@scientia.ufape.br` / `admin123`), que serve para testar as
-rotas restritas ao papel `ADMIN`.
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Disponível em `http://localhost:5173`.
-
-> A API ainda guarda usuários e produções em memória, então eles somem quando o
-> servidor é reiniciado. O banco descrito abaixo já está pronto, mas ainda não
-> está ligado à API. Fazer essa ligação mexe em
-> `backend/src/models/repositorioUsuarios.js` e
-> `backend/src/models/repositorioProducoes.js`, e ficou para a próxima iteração.
-
----
-
-# Banco de Dados
-
-Esta parte do repositório é a entrega da disciplina de Banco de Dados. É o MERE
-que fizemos na etapa anterior, mapeado para o esquema lógico relacional e já
-implementado e povoado.
-
-## Integrantes
-Lucas Feitoza | Carlos Gabyrel Espianhara | Laura Vitória Mendes | Heitor Calado Duque de Araújo
-
-O Heitor integra o grupo apenas em Banco de Dados, por isso não aparece na lista
-de integrantes do projeto lá em cima.
-
-A regra que guia o modelo é que navegar na vitrine é público e agir exige login.
-Por isso o login fica numa tabela `conta` separada, e não dentro de `pesquisador`
-ou `aluno`: um pesquisador puxado do Lattes precisa aparecer na vitrine mesmo sem
-nunca ter criado conta.
-
-## Configuração de acesso
+Sobe em `localhost:5432`, já criado e povoado pelos scripts de
+`database/init`, na primeira vez que o volume é criado.
 
 | Item | Valor |
 |---|---|
@@ -120,16 +59,6 @@ nunca ter criado conta.
 | Usuário | `scientia` |
 | Senha | `scientia` |
 
-## Como executar
-
-```bash
-docker compose up -d
-```
-
-O banco sobe já criado e povoado, sem passo manual nenhum. A imagem do PostgreSQL
-roda sozinha os arquivos que estão em `database/init` na primeira vez que o volume
-é criado, na ordem do nome: primeiro o `01-schema.sql`, depois o `02-seed.sql`.
-
 Outros comandos úteis:
 
 ```bash
@@ -139,6 +68,166 @@ docker compose down -v && docker compose up -d
 ```
 
 O `-v` do último é necessário porque os scripts de init só rodam com o volume vazio.
+
+### Backend
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run dev
+```
+Disponível em `http://localhost:3000`, conectado ao banco acima via
+`DATABASE_URL` do `.env`.
+
+Quando o servidor sobe, ele cria a conta de administrador definida no `.env`
+(por padrão `admin@scientia.ufape.br` / `admin123`), usada para testar as
+rotas restritas ao tipo `admin`.
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Disponível em `http://localhost:5173`.
+
+### Testes
+```bash
+cd backend && npm test       # 61 testes, node --test
+cd frontend && npm test      # 102 testes, vitest
+```
+O backend usa as variáveis de `backend/.env.test`, que aponta para o banco
+`scientia_teste` (criado automaticamente a partir do banco `scientia` do
+Docker, aplicando o schema quando necessário).
+
+## Contas e Tipos de Usuário
+O cadastro (`POST /api/auth/cadastro`) pede um tipo — `aluno` ou
+`pesquisador` — e os dados de perfil correspondentes:
+
+* **Aluno**: matrícula e curso (validado contra `GET /api/cursos`).
+* **Pesquisador**: número Lattes e vínculo (`docente`, `discente` ou
+  `externo`). Se o número Lattes já existir na base como pesquisador sem
+  conta — puxado de fontes externas ao Lattes —, o cadastro vincula a conta
+  nova a esse pesquisador em vez de duplicar o registro.
+
+O terceiro tipo, `admin`, não é criado pelo cadastro público: é a conta
+inicial que o backend garante ao subir, descrita acima.
+
+Como funciona o acesso, em resumo:
+
+* No cadastro e no login o backend devolve um **token JWT** assinado e com validade.
+* O frontend guarda esse token e o envia no cabeçalho `Authorization` de toda
+  requisição a rota protegida.
+* Um **middleware de autenticação** (`backend/src/middlewares/autenticacao.js`)
+  intercepta todas as requisições da API. Só as rotas listadas como públicas em
+  `backend/src/config/seguranca.js` passam sem token.
+* Um **middleware de autorização** (`exigeTipo`, em
+  `backend/src/middlewares/autorizacao.js`) trava as rotas que exigem um tipo
+  de conta específico.
+* No logout o token entra numa lista de encerrados e passa a ser recusado, então
+  não adianta reaproveitar um token copiado antes de sair.
+* No frontend, o componente `RotaProtegida` funciona como **guard**: sem sessão
+  manda para o login, e sem o tipo exigido manda para a tela de acesso negado.
+
+As histórias de usuário, os critérios de aceitação e a quebra em tarefas dessa
+parte do sistema estão em [docs/historias-de-usuario.md](docs/historias-de-usuario.md).
+
+## Acervo Científico
+A consulta ao acervo — publicações, projetos de pesquisa, grupos de pesquisa e
+pesquisadores — é pública: qualquer visitante navega sem login. Cadastrar um
+novo registro no acervo (publicação, projeto ou grupo) exige estar autenticado
+com conta do tipo `pesquisador` ou `admin`.
+
+Essa é a mesma regra que guia o modelo do banco: navegar na vitrine é público
+e agir exige login. Por isso o login fica numa tabela `conta` separada, e não
+dentro de `pesquisador` ou `aluno` — um pesquisador puxado de fonte externa
+precisa aparecer na vitrine mesmo sem nunca ter criado conta.
+
+### Endpoints da API
+
+| Método | Rota                     | Acesso                       |
+| ------ | ------------------------ | ----------------------------- |
+| GET    | `/api/status`             | Público                       |
+| POST   | `/api/auth/cadastro`      | Público                       |
+| POST   | `/api/auth/login`         | Público                       |
+| POST   | `/api/auth/logout`        | Autenticado                   |
+| GET    | `/api/auth/perfil`        | Autenticado                   |
+| GET    | `/api/usuarios`           | Somente `admin`               |
+| GET    | `/api/cursos`              | Público                       |
+| GET    | `/api/areas`               | Público                       |
+| GET    | `/api/editais`             | Público                       |
+| GET    | `/api/pesquisadores`       | Público                       |
+| GET    | `/api/grupos`              | Público                       |
+| GET    | `/api/grupos/:id`          | Público                       |
+| POST   | `/api/grupos`              | `pesquisador` ou `admin`      |
+| GET    | `/api/projetos`            | Público                       |
+| GET    | `/api/projetos/:id`        | Público                       |
+| POST   | `/api/projetos`            | `pesquisador` ou `admin`      |
+| GET    | `/api/publicacoes`         | Público                       |
+| GET    | `/api/publicacoes/:id`     | Público                       |
+| POST   | `/api/publicacoes`         | `pesquisador` ou `admin`      |
+
+A lista de rotas públicas (as que passam sem token) fica centralizada em
+`backend/src/config/seguranca.js`; qualquer rota fora dela exige o cabeçalho
+`Authorization: Bearer <token>`, e as marcadas com um tipo específico passam
+ainda pelo `exigeTipo`.
+
+## Integração Contínua e Qualidade
+Nesta iteração o backend ganhou um workflow próprio no GitHub Actions, em
+[.github/workflows/backend.yml](.github/workflows/backend.yml). Ele roda em
+pushes e pull requests para a branch `main` quando mudam arquivos de `backend/`,
+`database/` ou o próprio workflow.
+
+O job usa Node.js 22 e PostgreSQL 16. O serviço do PostgreSQL sobe com o mesmo
+usuário, senha e banco base do `docker-compose.yml`: `scientia` / `scientia` e
+banco `scientia`. Isso é importante porque os testes de API usam o banco de
+verdade: o helper de testes cria o banco `scientia_teste` a partir desse banco
+base e aplica o schema de `database/init/01-schema.sql` quando necessário.
+
+Como o backend é Node puro e não tem etapa de compilação, o workflow não inventa
+uma build artificial. Ele instala as dependências com `npm ci`, executa
+`npm run verificar` para confirmar que a aplicação carrega sem erro, e depois
+executa `npm run coverage`. Se os testes falharem, o job falha.
+
+A cobertura é gerada com o `c8`. O comando `npm run coverage` roda a mesma suíte
+do `npm test`, mas produz um resumo em texto no console e o arquivo
+`backend/coverage/lcov.info`, usado pelo SonarCloud. A configuração do `c8` mede
+apenas o código de produção em `backend/src/**/*.js` e exclui
+`backend/src/tests/**`.
+
+O SonarCloud lê as configurações de [sonar-project.properties](sonar-project.properties).
+Ele analisa o código em `backend/src`, trata `backend/src/tests` como testes,
+ignora os testes da análise de código de produção e consome o relatório LCOV da
+cobertura. O workflow usa a action oficial `SonarSource/sonarqube-scan-action`.
+
+Para a análise rodar no GitHub Actions, o repositório precisa ter o secret
+`SONAR_TOKEN` configurado em `Settings > Secrets and variables > Actions`. Se o
+secret ainda não existir, o workflow pula apenas a análise do SonarCloud e mantém
+as verificações e os testes do backend rodando normalmente.
+
+Também é preciso criar ou confirmar o projeto no SonarCloud. Os valores atuais
+seguem a convenção esperada para o repositório `ScientiaUFAPE/Scientia`:
+`sonar.projectKey=ScientiaUFAPE_Scientia` e
+`sonar.organization=scientiaufape`. Esses dois identificadores devem ser
+confirmados pelo integrante responsável ao criar a organização/projeto no
+SonarCloud.
+
+## Implantação
+As URLs abaixo ficam como ponto único de preenchimento para evitar conflito de
+merge entre as entregas de deploy:
+
+| Serviço | URL no Render | Responsável por preencher |
+|---|---|---|
+| Frontend | A preencher pelo integrante responsável pelo frontend | Frontend |
+| Backend | A preencher pela integrante responsável pelo backend | Backend |
+
+---
+
+# Banco de Dados
+
+Esta parte do repositório é a entrega da disciplina de Banco de Dados. É o MERE
+que fizemos na etapa anterior, mapeado para o esquema lógico relacional e já
+implementado e povoado, e é o mesmo banco usado pela API descrita acima.
 
 ## Estrutura dos arquivos
 

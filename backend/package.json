@@ -7,7 +7,23 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --env-file=.env.test --test"
+    "test": "node --env-file=.env.test --test",
+    "coverage": "c8 node --env-file=.env.test --test",
+    "verificar": "node --env-file=.env.test -e \"import('./src/app.js').then(({ criarApp }) => criarApp())\""
+  },
+  "c8": {
+    "all": true,
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "src/tests/**"
+    ],
+    "reporter": [
+      "text",
+      "lcov"
+    ],
+    "reports-dir": "coverage"
   },
   "license": "MIT",
   "dependencies": {
@@ -19,6 +35,7 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
+    "c8": "^12.0.0",
     "supertest": "^7.2.2"
   }
 }

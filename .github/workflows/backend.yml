@@ -1,0 +1,76 @@
+name: Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'database/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'database/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  backend:
+    name: Testes e análise do backend
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: scientia
+          POSTGRES_PASSWORD: scientia
+          POSTGRES_DB: scientia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U scientia -d scientia"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar inicialização da aplicação
+        run: npm run verificar
+
+      - name: Testes com cobertura
+        run: npm run coverage
+
+      - name: Análise do SonarCloud
+        if: ${{ env.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+
+      - name: SonarCloud não configurado
+        if: ${{ env.SONAR_TOKEN == '' }}
+        run: echo "SONAR_TOKEN não definido; análise do SonarCloud ignorada."
+        working-directory: .
