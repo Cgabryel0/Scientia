@@ -213,13 +213,16 @@ confirmados pelo integrante responsável ao criar a organização/projeto no
 SonarCloud.
 
 ## Implantação
-As URLs abaixo ficam como ponto único de preenchimento para evitar conflito de
-merge entre as entregas de deploy:
+O sistema está no ar no Render, com frontend e backend em contêiner Docker e um
+banco PostgreSQL dedicado.
 
-| Serviço | URL no Render | Responsável por preencher |
-|---|---|---|
-| Frontend | A preencher pelo integrante responsável pelo frontend | Frontend |
-| Backend | A preencher pela integrante responsável pelo backend | Backend |
+| Serviço | URL |
+|---|---|
+| Frontend | https://scientia-web.onrender.com |
+| Backend (API) | https://scientia-api-x194.onrender.com |
+
+O plano gratuito coloca os serviços em espera quando ficam sem acesso, então a
+primeira visita pode levar cerca de um minuto.
 
 ---
 
