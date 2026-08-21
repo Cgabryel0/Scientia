@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'node:crypto';
 
 import { ADMIN_INICIAL } from '../config/ambiente.js';
 import { transacao } from '../config/bd.js';
@@ -6,11 +7,11 @@ import { ErroHttp } from '../erros/ErroHttp.js';
 import { FORMATO_EMAIL } from '../models/formatoEmail.js';
 import * as repositorioCursos from '../models/repositorioCursos.js';
 import * as repositorioUsuarios from '../models/repositorioUsuarios.js';
+import { VINCULOS_PESQUISADOR } from '../models/vinculosPesquisador.js';
 
 const TAMANHO_MINIMO_SENHA = 6;
-const TIPOS_CADASTRO = ['aluno', 'pesquisador'];
-const VINCULOS_PESQUISADOR = ['docente', 'discente', 'externo'];
-const HASH_DUMMY_AUTENTICACAO = '$2b$10$1sOjgIPs9/ewWhYWL9EJvu0xDWtQtbWqKKc1YMh0pn9h1x87NlEya';
+const TIPOS_CADASTRO = new Set(['aluno', 'pesquisador']);
+const HASH_DUMMY_AUTENTICACAO = bcrypt.hashSync(`senha-dummy-${randomUUID()}`, 10);
 const CAMPOS_TEXTO_CADASTRO = ['tipo', 'nome', 'email', 'senha', 'matricula', 'numeroLattes', 'vinculo'];
 
 export async function cadastrar(dados) {
@@ -148,12 +149,12 @@ async function executarCadastro(operacao) {
   try {
     const usuario = await transacao(operacao);
     return aplicarNomeAdmin(usuario);
-  } catch (erro) {
-    if (erro.code === '23505') {
-      tratarConflitoUnico(erro);
+  } catch (err) {
+    if (err.code === '23505') {
+      tratarConflitoUnico(err);
     }
 
-    throw erro;
+    throw err;
   }
 }
 
@@ -207,7 +208,7 @@ function normalizarCadastro(dados = {}) {
 function validarDadosDoCadastro(cadastro) {
   const problemas = [];
 
-  if (!TIPOS_CADASTRO.includes(cadastro.tipo)) {
+  if (!TIPOS_CADASTRO.has(cadastro.tipo)) {
     problemas.push('O tipo deve ser aluno ou pesquisador.');
   }
 
@@ -269,14 +270,14 @@ function validarDadosDoPerfil(cadastro, problemas) {
       problemas.push('Informe o número Lattes.');
     }
 
-    if (!VINCULOS_PESQUISADOR.includes(cadastro.vinculo)) {
+    if (!VINCULOS_PESQUISADOR.has(cadastro.vinculo)) {
       problemas.push('O vínculo deve ser docente, discente ou externo.');
     }
   }
 }
 
 function aplicarNomeAdmin(usuario) {
-  if (!usuario || usuario.tipo !== 'admin') {
+  if (usuario?.tipo !== 'admin') {
     return usuario;
   }
 

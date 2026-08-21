@@ -58,9 +58,9 @@ export async function cadastrar(dados, usuario) {
     });
 
     return buscarPorId(idGrupo);
-  } catch (erro) {
-    tratarConflitoUnicoGrupo(erro);
-    throw erro;
+  } catch (err) {
+    tratarConflitoUnicoGrupo(err);
+    throw err;
   }
 }
 

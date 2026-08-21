@@ -108,7 +108,7 @@ function montarFiltros({ busca, vinculo }) {
 
   if (busca) {
     parametros.push(montarPadraoBusca(busca));
-    filtros.push(`pe.nome ILIKE $${parametros.length} ESCAPE '\\'`);
+    filtros.push(String.raw`pe.nome ILIKE $${parametros.length} ESCAPE '\'`);
   }
 
   if (vinculo) {

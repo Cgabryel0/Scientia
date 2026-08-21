@@ -22,13 +22,13 @@ export async function transacao(operacao) {
     await cliente.query('COMMIT');
     cliente.release();
     return resultado;
-  } catch (erro) {
-    const erroOriginal = erro;
+  } catch (err) {
+    const erroOriginal = err;
     try {
       await cliente.query('ROLLBACK');
       cliente.release();
-    } catch (erroRollback) {
-      cliente.release(erroRollback);
+    } catch (rollbackErr) {
+      cliente.release(rollbackErr);
     }
     throw erroOriginal;
   }
