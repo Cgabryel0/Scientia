@@ -8,7 +8,7 @@ import * as projetoService from '../servicos/projetoService.js';
 import { podeCadastrarNoAcervo, POR_PAGINA, ROTULOS_STATUS } from '../utils/acervo.js';
 
 export function Projetos() {
-  const { usuario } = useAuth();
+  const { usuario, token } = useAuth();
 
   const [projetos, setProjetos] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
@@ -85,6 +85,19 @@ export function Projetos() {
     setStatus('');
     setIdGrupo('');
     setPagina(1);
+  }
+
+  async function excluirProjeto(projeto) {
+    if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Os registros dependentes serão removidos.`)) {
+      return;
+    }
+
+    try {
+      await projetoService.excluir(projeto.id, token);
+      setProjetos((atuais) => atuais.filter((item) => item.id !== projeto.id));
+    } catch (falha) {
+      setErro(falha.message);
+    }
   }
 
   return (
@@ -193,6 +206,17 @@ export function Projetos() {
                   </li>
                 ))}
               </ul>
+
+              {podeCadastrarNoAcervo(usuario) && (
+                <div className="acoes-registro">
+                  <Link className="botao botao--discreto" to={`/projetos/${projeto.id}/editar`}>
+                    Editar
+                  </Link>
+                  <button type="button" className="botao botao--discreto" onClick={() => excluirProjeto(projeto)}>
+                    Excluir
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -109,6 +109,66 @@ export async function cadastrar(dados, usuario) {
   }
 }
 
+export async function atualizar(valorId, dados, usuario) {
+  const id = validarId(valorId);
+  const dadosProjeto = dados ?? {};
+  validarTiposDoProjeto(dadosProjeto);
+  const projeto = normalizarProjeto(dadosProjeto);
+  validarDadosDoProjeto(projeto);
+
+  try {
+    await transacao(async (cliente) => {
+      await resolverPesquisadorAutenticado(usuario, cliente);
+
+      if (!(await repositorioProjetos.existe(id, cliente))) {
+        throw new ErroHttp(404, 'Projeto não encontrado.');
+      }
+
+      if (!(await repositorioGrupos.existe(projeto.idGrupo, cliente))) {
+        throw new ErroHttp(400, 'Grupo não encontrado.');
+      }
+
+      if (projeto.idEdital !== null && !(await repositorioProjetos.editalExiste(projeto.idEdital, cliente))) {
+        throw new ErroHttp(400, 'Edital não encontrado.');
+      }
+
+      const idsArea = [...new Set(projeto.areas)];
+      if (idsArea.length > 0) {
+        const existentes = await repositorioProjetos.areasExistentes(idsArea, cliente);
+        if (existentes.length !== idsArea.length) {
+          throw new ErroHttp(400, 'Área não encontrada.');
+        }
+      }
+
+      await repositorioProjetos.atualizar(cliente, id, projeto);
+      await repositorioProjetos.removerAreas(cliente, id);
+
+      for (const idArea of idsArea) {
+        await repositorioProjetos.vincularArea(cliente, { idProjeto: id, idArea });
+      }
+    });
+
+    return buscarPorId(id);
+  } catch (err) {
+    tratarConflitoProjeto(err);
+    throw err;
+  }
+}
+
+export async function excluir(valorId, usuario) {
+  const id = validarId(valorId);
+
+  await transacao(async (cliente) => {
+    await resolverPesquisadorAutenticado(usuario, cliente);
+
+    if (!(await repositorioProjetos.existe(id, cliente))) {
+      throw new ErroHttp(404, 'Projeto não encontrado.');
+    }
+
+    await repositorioProjetos.excluir(cliente, id);
+  });
+}
+
 function validarTiposDoProjeto(dados) {
   const textoInvalido = CAMPOS_TEXTO_PROJETO.some(
     (campo) => dados[campo] != null && typeof dados[campo] !== 'string',
