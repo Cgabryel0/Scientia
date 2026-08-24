@@ -150,6 +150,52 @@ export async function criar(executor, { titulo, resumo, dataInicio, dataFim, sta
   return rows[0].id_projeto;
 }
 
+export async function atualizar(
+  executor,
+  idProjeto,
+  { titulo, resumo, dataInicio, dataFim, status, idGrupo, idEdital },
+) {
+  const resultado = await executor.query(
+    `
+      UPDATE projeto_pesquisa
+      SET
+        id_grupo = $2,
+        id_edital = $3,
+        titulo = $4,
+        resumo = $5,
+        data_inicio = $6,
+        data_fim = $7,
+        status = $8
+      WHERE id_projeto = $1
+    `,
+    [idProjeto, idGrupo, idEdital, titulo, resumo, dataInicio, dataFim, status],
+  );
+
+  return resultado.rowCount > 0;
+}
+
+export async function removerAreas(executor, idProjeto) {
+  await executor.query(
+    `
+      DELETE FROM possui_area
+      WHERE id_projeto = $1
+    `,
+    [idProjeto],
+  );
+}
+
+export async function excluir(executor, idProjeto) {
+  const resultado = await executor.query(
+    `
+      DELETE FROM projeto_pesquisa
+      WHERE id_projeto = $1
+    `,
+    [idProjeto],
+  );
+
+  return resultado.rowCount > 0;
+}
+
 export async function vincularArea(executor, { idProjeto, idArea }) {
   await executor.query(
     `

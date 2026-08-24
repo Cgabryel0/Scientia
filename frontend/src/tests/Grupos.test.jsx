@@ -12,6 +12,10 @@ vi.mock('../servicos/grupoService.js', () => ({
   buscarPorId: vi.fn(),
 }));
 
+vi.mock('../contexto/AuthContext.jsx', () => ({
+  useAuth: () => ({ usuario: null, token: null }),
+}));
+
 describe('Tela de grupos de pesquisa', () => {
   beforeEach(() => {
     vi.useFakeTimers();

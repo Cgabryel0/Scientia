@@ -89,6 +89,31 @@ export async function criar(executor, { nome, linkDgp, anoCriacao }) {
   return rows[0].id_grupo;
 }
 
+export async function atualizar(executor, idGrupo, { nome, linkDgp, anoCriacao }) {
+  const resultado = await executor.query(
+    `
+      UPDATE grupo_pesquisa
+      SET nome_grupo = $2, link_dgp = $3, ano_criacao = $4
+      WHERE id_grupo = $1
+    `,
+    [idGrupo, nome, linkDgp, anoCriacao],
+  );
+
+  return resultado.rowCount > 0;
+}
+
+export async function excluir(executor, idGrupo) {
+  const resultado = await executor.query(
+    `
+      DELETE FROM grupo_pesquisa
+      WHERE id_grupo = $1
+    `,
+    [idGrupo],
+  );
+
+  return resultado.rowCount > 0;
+}
+
 export async function criarMembro(executor, { idGrupo, idPesquisador, papel }) {
   await executor.query(
     `

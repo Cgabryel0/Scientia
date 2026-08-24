@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Paginacao } from '../componentes/Paginacao.jsx';
+import { useAuth } from '../contexto/AuthContext.jsx';
 import * as grupoService from '../servicos/grupoService.js';
-import { POR_PAGINA } from '../utils/acervo.js';
+import { podeCadastrarNoAcervo, POR_PAGINA } from '../utils/acervo.js';
 
 export function Grupos() {
+  const { usuario, token } = useAuth();
   const [grupos, setGrupos] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
   const [erro, setErro] = useState('');
@@ -49,6 +51,19 @@ export function Grupos() {
 
   const filtrosAtivos = Boolean(buscaAplicada.trim());
 
+  async function excluirGrupo(grupo) {
+    if (!window.confirm(`Excluir o grupo "${grupo.nome}"?`)) {
+      return;
+    }
+
+    try {
+      await grupoService.excluir(grupo.id, token);
+      setGrupos((atuais) => atuais.filter((item) => item.id !== grupo.id));
+    } catch (falha) {
+      setErro(falha.message);
+    }
+  }
+
   return (
     <section>
       <div className="pagina__cabecalho">
@@ -58,6 +73,11 @@ export function Grupos() {
             Conheça os grupos que reúnem os pesquisadores e os projetos do curso.
           </p>
         </div>
+        {podeCadastrarNoAcervo(usuario) && (
+          <Link to="/grupos/cadastro" className="botao botao--primario botao--compacto">
+            Cadastrar grupo
+          </Link>
+        )}
       </div>
 
       <form
@@ -124,6 +144,21 @@ export function Grupos() {
                 >
                   Perfil no Diretório de Grupos
                 </a>
+              )}
+
+              {podeCadastrarNoAcervo(usuario) && (
+                <div className="acoes-registro">
+                  <Link className="botao botao--discreto" to={`/grupos/${grupo.id}/editar`}>
+                    Editar
+                  </Link>
+                  <button
+                    type="button"
+                    className="botao botao--discreto"
+                    onClick={() => excluirGrupo(grupo)}
+                  >
+                    Excluir
+                  </button>
+                </div>
               )}
             </li>
           ))}

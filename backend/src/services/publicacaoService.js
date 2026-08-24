@@ -99,6 +99,60 @@ export async function cadastrar(dados, usuario) {
   }
 }
 
+export async function atualizar(valorId, dados, usuario) {
+  const id = validarId(valorId);
+  const dadosPublicacao = dados ?? {};
+  validarTiposDaPublicacao(dadosPublicacao);
+  const publicacao = normalizarPublicacao(dadosPublicacao);
+  validarDadosDaPublicacao(publicacao);
+
+  try {
+    await transacao(async (cliente) => {
+      await resolverPesquisadorAutenticado(usuario, cliente);
+
+      if (!(await repositorioPublicacoes.existe(id, cliente))) {
+        throw new ErroHttp(404, 'Publicação não encontrada.');
+      }
+
+      if (!(await repositorioProjetos.existe(publicacao.idProjeto, cliente))) {
+        throw new ErroHttp(400, 'Projeto não encontrado.');
+      }
+
+      const autores = await resolverAutores(publicacao.autores, cliente);
+      await repositorioPublicacoes.atualizar(cliente, id, publicacao);
+      await repositorioPublicacoes.removerAutorias(cliente, id);
+
+      for (const [indice, autor] of autores.entries()) {
+        await repositorioPublicacoes.criarAutoria(cliente, {
+          idPublicacao: id,
+          idPesquisador: autor.id,
+          ordem: indice + 1,
+        });
+      }
+    });
+
+    return buscarPorId(id);
+  } catch (err) {
+    tratarConflitoUnicoPublicacao(err);
+    throw err;
+  }
+}
+
+export async function excluir(valorId, usuario) {
+  const id = validarId(valorId);
+
+  await transacao(async (cliente) => {
+    await resolverPesquisadorAutenticado(usuario, cliente);
+    const existe = await repositorioPublicacoes.existe(id, cliente);
+
+    if (!existe) {
+      throw new ErroHttp(404, 'Publicação não encontrada.');
+    }
+
+    await repositorioPublicacoes.excluir(cliente, id);
+  });
+}
+
 async function resolverAutores(autores, cliente) {
   const resolvidos = [];
   const idsResolvidos = new Set();

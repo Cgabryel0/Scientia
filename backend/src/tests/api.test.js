@@ -1269,4 +1269,311 @@ describe('Cadastro do acervo', () => {
     assert.strictEqual(resposta.body.mensagem, 'Sua conta não está vinculada a um pesquisador.');
   });
 });
+
+describe('CRUD completo, Views, vagas e candidaturas', () => {
+  beforeEach(reiniciarCenarioAcervoTeste);
+
+  it('atualiza e exclui projetos preservando relações e cascatas', async () => {
+    const token = await tokenPesquisadorTeste();
+
+    const atualizacao = await request(app)
+      .put('/api/projetos/3')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        titulo: 'Projeto atualizado para a entrega',
+        resumo: 'Resumo atualizado.',
+        dataInicio: '2024-03-01',
+        dataFim: '2026-12-20',
+        status: 'concluido',
+        idGrupo: 2,
+        idEdital: null,
+        areas: [2],
+      });
+
+    assert.strictEqual(atualizacao.status, 200);
+    assert.strictEqual(atualizacao.body.projeto.titulo, 'Projeto atualizado para a entrega');
+    assert.strictEqual(atualizacao.body.projeto.status, 'concluido');
+    assert.strictEqual(atualizacao.body.projeto.edital, null);
+    assert.deepStrictEqual(atualizacao.body.projeto.areas.map((area) => area.id), [2]);
+
+    const exclusao = await request(app)
+      .delete('/api/projetos/4')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.strictEqual(exclusao.status, 204);
+
+    const restos = await consultar(`
+      SELECT
+        (SELECT COUNT(*)::int FROM projeto_pesquisa WHERE id_projeto = 4) AS projetos,
+        (SELECT COUNT(*)::int FROM publicacao WHERE id_projeto = 4) AS publicacoes
+    `);
+
+    assert.deepStrictEqual(restos.rows[0], { projetos: 0, publicacoes: 0 });
+  });
+
+  it('atualiza autoria de publicação e exclui autorias por cascata', async () => {
+    const token = await tokenPesquisadorTeste();
+
+    const atualizacao = await request(app)
+      .put('/api/publicacoes/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        titulo: 'Publicação revisada',
+        tipo: 'artigo',
+        ano: 2026,
+        doi: '10.1000/exemplo.1',
+        veiculo: 'Revista de Testes do Scientia',
+        idProjeto: 4,
+        autores: [{ id: 117 }, { id: 91 }],
+      });
+
+    assert.strictEqual(atualizacao.status, 200);
+    assert.strictEqual(atualizacao.body.publicacao.projeto.id, 4);
+    assert.deepStrictEqual(
+      atualizacao.body.publicacao.autores.map((autor) => [autor.id, autor.ordem]),
+      [
+        [117, 1],
+        [91, 2],
+      ],
+    );
+
+    const exclusao = await request(app)
+      .delete('/api/publicacoes/2')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.strictEqual(exclusao.status, 204);
+
+    const autorias = await consultar(
+      'SELECT COUNT(*)::int AS total FROM autoria WHERE id_publicacao = $1',
+      [2],
+    );
+    assert.strictEqual(autorias.rows[0].total, 0);
+  });
+
+  it('atualiza grupo, exclui grupo sem projetos e protege grupo referenciado', async () => {
+    const token = await tokenPesquisadorTeste();
+
+    const atualizacao = await request(app)
+      .put('/api/grupos/2')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        nome: 'Grupo de Computação Aplicada Atualizado',
+        linkDgp: 'https://dgp.cnpq.br/grupo-atualizado',
+        anoCriacao: 2016,
+      });
+
+    assert.strictEqual(atualizacao.status, 200);
+    assert.strictEqual(atualizacao.body.grupo.nome, 'Grupo de Computação Aplicada Atualizado');
+
+    const cadastro = await request(app)
+      .post('/api/grupos')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        nome: 'Grupo Temporário para Exclusão',
+        linkDgp: null,
+        anoCriacao: 2026,
+      });
+
+    assert.strictEqual(cadastro.status, 201);
+
+    const exclusao = await request(app)
+      .delete(`/api/grupos/${cadastro.body.grupo.id}`)
+      .set('Authorization', `Bearer ${token}`);
+    assert.strictEqual(exclusao.status, 204);
+
+    const protegido = await request(app)
+      .delete('/api/grupos/2')
+      .set('Authorization', `Bearer ${token}`);
+    assert.strictEqual(protegido.status, 409);
+    assert.strictEqual(protegido.body.mensagem, 'Não é possível excluir um grupo que possui projetos.');
+  });
+
+  it('consulta as três Views pelos endpoints de relatórios com agregações coerentes', async () => {
+    const projetos = await request(app).get('/api/relatorios/projetos');
+    const publicacoes = await request(app).get('/api/relatorios/publicacoes');
+    const grupos = await request(app).get('/api/relatorios/grupos');
+
+    assert.strictEqual(projetos.status, 200);
+    assert.strictEqual(publicacoes.status, 200);
+    assert.strictEqual(grupos.status, 200);
+
+    const projeto = projetos.body.projetos.find((item) => item.idProjeto === 3);
+    assert.strictEqual(projeto.nomeGrupo, 'Grupo de Pesquisa em Computação Aplicada');
+    assert.strictEqual(projeto.quantidadePublicacoes, 2);
+
+    const linhasPublicacao = publicacoes.body.publicacoes.filter((item) => item.idPublicacao === 2);
+    assert.deepStrictEqual(
+      linhasPublicacao.map((item) => [item.idPesquisador, item.ordemAutor]),
+      [
+        [104, 1],
+        [117, 2],
+        [91, 3],
+      ],
+    );
+
+    const grupo = grupos.body.grupos.find((item) => item.idGrupo === 2);
+    assert.strictEqual(grupo.quantidadePesquisadores, 2);
+    assert.strictEqual(grupo.quantidadeProjetos, 1);
+    assert.strictEqual(grupo.projetosEmAndamento, 1);
+    assert.strictEqual(grupo.lideres, 'Zuleica Souza');
+  });
+
+  it('executa CRUD de vagas e valida projeto, quantidade e status', async () => {
+    const token = await tokenPesquisadorTeste();
+
+    const invalida = await request(app)
+      .post('/api/vagas')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        idProjeto: 999,
+        titulo: 'Vaga inválida',
+        requisitos: null,
+        status: 'aberta',
+        qtdVagas: 1,
+        dataAbertura: '2026-08-23',
+      });
+    assert.strictEqual(invalida.status, 400);
+    assert.strictEqual(invalida.body.mensagem, 'Projeto não encontrado.');
+
+    const cadastro = await request(app)
+      .post('/api/vagas')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        idProjeto: 3,
+        titulo: 'Iniciação científica em IA',
+        requisitos: 'Conhecimentos básicos de programação.',
+        status: 'aberta',
+        qtdVagas: 2,
+        dataAbertura: '2026-08-23',
+      });
+
+    assert.strictEqual(cadastro.status, 201);
+    assert.strictEqual(cadastro.body.vaga.projeto.id, 3);
+    assert.strictEqual(cadastro.body.vaga.totalCandidaturas, 0);
+    const idVaga = cadastro.body.vaga.id;
+
+    const atualizacao = await request(app)
+      .put(`/api/vagas/${idVaga}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        idProjeto: 3,
+        titulo: 'Iniciação científica em IA atualizada',
+        requisitos: 'Python e banco de dados.',
+        status: 'fechada',
+        qtdVagas: 3,
+        dataAbertura: '2026-08-23',
+      });
+
+    assert.strictEqual(atualizacao.status, 200);
+    assert.strictEqual(atualizacao.body.vaga.status, 'fechada');
+    assert.strictEqual(atualizacao.body.vaga.qtdVagas, 3);
+
+    const exclusao = await request(app)
+      .delete(`/api/vagas/${idVaga}`)
+      .set('Authorization', `Bearer ${token}`);
+    assert.strictEqual(exclusao.status, 204);
+
+    const inexistente = await request(app).get(`/api/vagas/${idVaga}`);
+    assert.strictEqual(inexistente.status, 404);
+  });
+
+  it('executa fluxo completo de candidatura pela chave composta', async () => {
+    const tokenPesquisador = await tokenPesquisadorTeste();
+    const cadastroVaga = await request(app)
+      .post('/api/vagas')
+      .set('Authorization', `Bearer ${tokenPesquisador}`)
+      .send({
+        idProjeto: 3,
+        titulo: 'Vaga para testar candidatura',
+        requisitos: null,
+        status: 'aberta',
+        qtdVagas: 1,
+        dataAbertura: '2026-08-23',
+      });
+    assert.strictEqual(cadastroVaga.status, 201);
+    const idVaga = cadastroVaga.body.vaga.id;
+
+    const tokenAluno = await tokenAlunoTeste();
+    const aluno = await consultar(
+      `
+        SELECT a.id_aluno
+        FROM aluno a
+        JOIN conta c ON c.id_conta = a.id_conta
+        WHERE c.email = $1
+      `,
+      ['aluno.acervo@ufape.edu.br'],
+    );
+    const idAluno = aluno.rows[0].id_aluno;
+
+    const cadastro = await request(app)
+      .post('/api/candidaturas')
+      .set('Authorization', `Bearer ${tokenAluno}`)
+      .send({ idVaga });
+
+    assert.strictEqual(cadastro.status, 201);
+    assert.strictEqual(cadastro.body.candidatura.aluno.id, idAluno);
+    assert.strictEqual(cadastro.body.candidatura.vaga.id, idVaga);
+    assert.strictEqual(cadastro.body.candidatura.status, 'pendente');
+
+    const duplicada = await request(app)
+      .post('/api/candidaturas')
+      .set('Authorization', `Bearer ${tokenAluno}`)
+      .send({ idVaga });
+    assert.strictEqual(duplicada.status, 409);
+
+    const atualizacao = await request(app)
+      .put(`/api/candidaturas/${idAluno}/${idVaga}`)
+      .set('Authorization', `Bearer ${tokenPesquisador}`)
+      .send({ status: 'aprovada' });
+    assert.strictEqual(atualizacao.status, 200);
+    assert.strictEqual(atualizacao.body.candidatura.status, 'aprovada');
+
+    const listaAluno = await request(app)
+      .get('/api/candidaturas')
+      .set('Authorization', `Bearer ${tokenAluno}`);
+    assert.strictEqual(listaAluno.status, 200);
+    assert.deepStrictEqual(listaAluno.body.paginacao, { pagina: 1, porPagina: 20, total: 1 });
+    assert.strictEqual(listaAluno.body.candidaturas[0].aluno.id, idAluno);
+
+    const exclusao = await request(app)
+      .delete(`/api/candidaturas/${idAluno}/${idVaga}`)
+      .set('Authorization', `Bearer ${tokenAluno}`);
+    assert.strictEqual(exclusao.status, 204);
+
+    const detalhe = await request(app)
+      .get(`/api/candidaturas/${idAluno}/${idVaga}`)
+      .set('Authorization', `Bearer ${tokenPesquisador}`);
+    assert.strictEqual(detalhe.status, 404);
+  });
+
+  it('impede candidatura em vaga fechada e acesso do aluno a candidatura alheia', async () => {
+    const tokenPesquisador = await tokenPesquisadorTeste();
+    const cadastroVaga = await request(app)
+      .post('/api/vagas')
+      .set('Authorization', `Bearer ${tokenPesquisador}`)
+      .send({
+        idProjeto: 3,
+        titulo: 'Vaga fechada',
+        requisitos: null,
+        status: 'fechada',
+        qtdVagas: 1,
+        dataAbertura: '2026-08-23',
+      });
+    const idVaga = cadastroVaga.body.vaga.id;
+    const tokenAluno = await tokenAlunoTeste();
+
+    const fechada = await request(app)
+      .post('/api/candidaturas')
+      .set('Authorization', `Bearer ${tokenAluno}`)
+      .send({ idVaga });
+    assert.strictEqual(fechada.status, 409);
+    assert.strictEqual(fechada.body.mensagem, 'A vaga está fechada para novas candidaturas.');
+
+    const acessoAlheio = await request(app)
+      .get(`/api/candidaturas/999/${idVaga}`)
+      .set('Authorization', `Bearer ${tokenAluno}`);
+    assert.strictEqual(acessoAlheio.status, 403);
+    assert.strictEqual(acessoAlheio.body.mensagem, 'Você só pode acessar suas próprias candidaturas.');
+  });
+});
 });

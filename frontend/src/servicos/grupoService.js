@@ -11,3 +11,11 @@ export function buscarPorId(id) {
 export function cadastrar(dados, token) {
   return requisitar('/grupos', { metodo: 'POST', corpo: dados, token });
 }
+
+export function atualizar(id, dados, token) {
+  return requisitar(`/grupos/${id}`, { metodo: 'PUT', corpo: dados, token });
+}
+
+export function excluir(id, token) {
+  return requisitar(`/grupos/${id}`, { metodo: 'DELETE', token });
+}

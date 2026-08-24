@@ -19,3 +19,13 @@ export async function cadastrar(req, res) {
   const projeto = await projetoService.cadastrar(req.body ?? {}, req.usuario);
   res.status(201).json({ projeto: projetoDetalheResposta(projeto) });
 }
+
+export async function atualizar(req, res) {
+  const projeto = await projetoService.atualizar(req.params.id, req.body ?? {}, req.usuario);
+  res.json({ projeto: projetoDetalheResposta(projeto) });
+}
+
+export async function excluir(req, res) {
+  await projetoService.excluir(req.params.id, req.usuario);
+  res.status(204).end();
+}

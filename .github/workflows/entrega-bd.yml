@@ -1,0 +1,86 @@
+name: Validacao entrega Banco de Dados
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'integration/**'
+    paths:
+      - 'backend/**'
+      - 'database/**'
+      - 'frontend/**'
+      - 'tests/**'
+      - 'docker-compose.yml'
+      - 'README.md'
+      - '.github/workflows/entrega-bd.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'database/**'
+      - 'frontend/**'
+      - 'tests/**'
+      - 'docker-compose.yml'
+      - 'README.md'
+      - '.github/workflows/entrega-bd.yml'
+
+jobs:
+  validacao:
+    name: Testes estaticos e Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Testes sem dependencias externas
+        run: node --test tests/entrega-estatica.test.mjs tests/entrega-rigida.test.mjs
+
+      - name: Validar Docker Compose
+        run: docker compose config --quiet
+
+      - name: Subir aplicacao completa
+        run: docker compose up --build -d
+
+      - name: Aguardar backend e frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          for tentativa in {1..60}; do
+            if curl --fail --silent http://localhost:3000/api/status >/dev/null \
+              && curl --fail --silent http://localhost:5173 >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Aplicacao nao ficou pronta dentro do tempo esperado."
+          exit 1
+
+      - name: Validar as tres Views no PostgreSQL
+        run: |
+          docker compose exec -T db psql -U scientia -d scientia -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT COUNT(*) FROM v_projetos_detalhados;
+          SELECT COUNT(*) FROM v_producao_bibliografica;
+          SELECT COUNT(*) FROM v_grupos_pesquisa;
+          SQL
+
+      - name: Validar endpoints das tres Views
+        run: |
+          curl --fail --silent http://localhost:3000/api/relatorios/projetos >/dev/null
+          curl --fail --silent http://localhost:3000/api/relatorios/publicacoes >/dev/null
+          curl --fail --silent http://localhost:3000/api/relatorios/grupos >/dev/null
+
+      - name: Exibir logs em caso de falha
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Encerrar containers
+        if: always()
+        run: docker compose down -v

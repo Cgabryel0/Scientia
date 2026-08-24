@@ -6,6 +6,73 @@
 Heitor Calado Duque de Araújo integra o grupo apenas na disciplina de Banco de
 Dados, por isso não aparece nos commits do restante do projeto.
 
+## Entrega de Banco de Dados — Implementação e Visões
+
+**Responsável pela finalização desta entrega:** Laura Vitória Mendes.
+
+A entrega integra banco, backend e frontend em um único `docker compose`, com CRUD de
+projetos, publicações, grupos, vagas e candidaturas e com três Views SQL não triviais.
+
+### Portas da aplicação
+
+| Serviço | Porta no computador | Serviço Docker |
+|---|---:|---|
+| PostgreSQL | `5432` | `db` |
+| Backend / API | `3000` | `backend` |
+| Frontend | `5173` | `frontend` |
+
+A comunicação interna do backend com o banco usa `db:5432`, e não `localhost`. O
+frontend é servido pelo Nginx em `http://localhost:5173` e acessa a API em
+`http://localhost:3000/api`.
+
+### Execução integral com Docker
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Depois da inicialização, acesse `http://localhost:5173`. O `-v` é importante quando
+for necessário recriar o banco e executar novamente os scripts de `database/init`.
+
+### Banco, esquema e povoamento
+
+O esquema conceitual/lógico atualizado está documentado em
+`database/docs/diagrama-logico-uml.png` e `database/docs/diagrama-logico.mermaid`. O
+dicionário de dados está em `database/docs/dicionario-de-dados.pdf`.
+
+O banco é criado automaticamente pelos scripts abaixo, executados pelo PostgreSQL na
+ordem alfabética:
+
+1. `database/init/01-schema.sql`: tabelas, PKs, FKs, constraints e índices.
+2. `database/init/02-seed.sql`: povoamento reprodutível com cursos, contas, alunos,
+   pesquisadores, editais, grupos, projetos, publicações, vagas, vínculos, autorias e
+   candidaturas. Parte dos dados é gerada com `generate_series` para formar um volume
+   maior e consistente de registros relacionados.
+3. `database/init/03-views.sql`: criação das três Views da entrega.
+
+### Views da entrega
+
+| View | Finalidade | Principais relações |
+|---|---|---|
+| `v_projetos_detalhados` | Resumo de projeto com grupo, edital e quantidade de publicações | `projeto_pesquisa`, `grupo_pesquisa`, `edital`, `publicacao` |
+| `v_producao_bibliografica` | Produção bibliográfica com projeto, grupo, autor e ordem de autoria | `publicacao`, `projeto_pesquisa`, `grupo_pesquisa`, `autoria`, `pesquisador` |
+| `v_grupos_pesquisa` | Indicadores de membros, liderança e projetos por grupo | `grupo_pesquisa`, `membro`, `pesquisador`, `projeto_pesquisa` |
+
+A tela **Relatórios** (`/relatorios`) consome os endpoints
+`/api/relatorios/projetos`, `/api/relatorios/publicacoes` e
+`/api/relatorios/grupos`. O backend consulta diretamente as Views em vez de repetir os
+JOINs e agregações.
+
+### CRUDs implementados para a entrega
+
+- Projetos: `GET`, `POST`, `PUT` e `DELETE` em `/api/projetos`.
+- Publicações: `GET`, `POST`, `PUT` e `DELETE` em `/api/publicacoes`.
+- Grupos: `GET`, `POST`, `PUT` e `DELETE` em `/api/grupos`.
+- Vagas: `GET`, `POST`, `PUT` e `DELETE` em `/api/vagas`.
+- Candidaturas: `GET`, `POST`, `PUT` e `DELETE` em `/api/candidaturas`, usando a chave
+  composta nas rotas `/api/candidaturas/:idAluno/:idVaga`.
+
 ## Sobre o Projeto
 Projeto para implementação de um hub de produção científica do curso de __Bacharelado em Ciência da Computação (BCC)__ da UFAPE, desenvolvido para a disciplina de __Engenharia de Software__ ministrada pela Professora [Thaís Burity](https://github.com/taburity), referente ao período de 2026.1.
 
@@ -25,19 +92,8 @@ O sistema deve permitir o cadastro e a consulta das produções científicas do 
 * Banco relacional, versão 16, rodando em contêiner
 
 ## Status do Projeto
-Em desenvolvimento - quarta iteração em andamento.
+A entrega de Banco de Dados está integrada: CRUDs principais, três Views SQL, tela de relatórios, vagas, candidaturas e execução integral via Docker Compose estão implementados.
 
-O modelo relacional (`database/`) está implementado de ponta a ponta: contas,
-consulta e cadastro do acervo (publicações, projetos, grupos de pesquisa,
-pesquisadores, áreas de conhecimento e editais) já lêem e escrevem direto no
-PostgreSQL, tanto pela API quanto pelas telas do frontend.
-
-O banco também tem as tabelas `vaga` e `candidatura`, usadas no povoamento e no
-diagrama lógico, mas essa parte do domínio ainda não tem endpoint na API nem
-tela no frontend — não faz parte do que está entregue até aqui.
-
-Nesta quarta iteração o foco é configurar integração contínua e implantação do
-backend, descritas nas seções abaixo.
 
 ## Como Executar
 Precisa do [Node.js](https://nodejs.org/) 22 ou superior e do
@@ -92,13 +148,34 @@ npm run dev
 Disponível em `http://localhost:5173`.
 
 ### Testes
+
+Há uma suíte de validação da entrega que usa apenas o Node.js e **não precisa de
+Docker, PostgreSQL nem instalação das dependências do projeto**:
+
 ```bash
-cd backend && npm test       # 61 testes, node --test
-cd frontend && npm test      # 102 testes, vitest
+node --test tests/entrega-estatica.test.mjs tests/entrega-rigida.test.mjs
 ```
+
+Elas verificam estrutura obrigatória, schema/seed, três Views, referências de
+tabelas/colunas, rotas CRUD, chave composta de candidatura, segurança, Docker
+Compose, imports, sintaxe e regressões específicas da entrega.
+
+O workflow `.github/workflows/entrega-bd.yml` repete essas validações no GitHub
+Actions e também executa `docker compose up --build`, testa a inicialização dos
+três serviços e consulta as três Views e seus endpoints em um ambiente limpo.
+
+As suítes completas continuam disponíveis para um ambiente com as dependências e
+PostgreSQL instalados:
+
+```bash
+cd backend && npm test
+cd frontend && npm test
+```
+
 O backend usa as variáveis de `backend/.env.test`, que aponta para o banco
-`scientia_teste` (criado automaticamente a partir do banco `scientia` do
-Docker, aplicando o schema quando necessário).
+`scientia_teste` (criado automaticamente a partir do banco `scientia`, aplicando
+o schema e `database/init/03-views.sql`). A suíte de API inclui regressões para
+`PUT`/`DELETE`, relatórios, vagas e candidaturas.
 
 ## Contas e Tipos de Usuário
 O cadastro (`POST /api/auth/cadastro`) pede um tipo — `aluno` ou
@@ -133,10 +210,11 @@ As histórias de usuário, os critérios de aceitação e a quebra em tarefas de
 parte do sistema estão em [docs/historias-de-usuario.md](docs/historias-de-usuario.md).
 
 ## Acervo Científico
-A consulta ao acervo — publicações, projetos de pesquisa, grupos de pesquisa e
-pesquisadores — é pública: qualquer visitante navega sem login. Cadastrar um
-novo registro no acervo (publicação, projeto ou grupo) exige estar autenticado
-com conta do tipo `pesquisador` ou `admin`.
+A consulta ao acervo — publicações, projetos de pesquisa, grupos de pesquisa,
+pesquisadores, vagas e relatórios — é pública: qualquer visitante navega sem
+login. Criar, atualizar ou excluir publicações, projetos, grupos e vagas exige
+conta do tipo `pesquisador` ou `admin`. Candidaturas são protegidas e seguem as
+permissões específicas de aluno, pesquisador e administrador.
 
 Essa é a mesma regra que guia o modelo do banco: navegar na vitrine é público
 e agir exige login. Por isso o login fica numa tabela `conta` separada, e não
@@ -160,12 +238,31 @@ precisa aparecer na vitrine mesmo sem nunca ter criado conta.
 | GET    | `/api/grupos`              | Público                       |
 | GET    | `/api/grupos/:id`          | Público                       |
 | POST   | `/api/grupos`              | `pesquisador` ou `admin`      |
+| PUT    | `/api/grupos/:id`          | `pesquisador` ou `admin`      |
+| DELETE | `/api/grupos/:id`          | `pesquisador` ou `admin`      |
 | GET    | `/api/projetos`            | Público                       |
 | GET    | `/api/projetos/:id`        | Público                       |
 | POST   | `/api/projetos`            | `pesquisador` ou `admin`      |
+| PUT    | `/api/projetos/:id`        | `pesquisador` ou `admin`      |
+| DELETE | `/api/projetos/:id`        | `pesquisador` ou `admin`      |
 | GET    | `/api/publicacoes`         | Público                       |
 | GET    | `/api/publicacoes/:id`     | Público                       |
 | POST   | `/api/publicacoes`         | `pesquisador` ou `admin`      |
+| PUT    | `/api/publicacoes/:id`     | `pesquisador` ou `admin`      |
+| DELETE | `/api/publicacoes/:id`     | `pesquisador` ou `admin`      |
+| GET    | `/api/vagas`               | Público                       |
+| GET    | `/api/vagas/:id`           | Público                       |
+| POST   | `/api/vagas`               | `pesquisador` ou `admin`      |
+| PUT    | `/api/vagas/:id`           | `pesquisador` ou `admin`      |
+| DELETE | `/api/vagas/:id`           | `pesquisador` ou `admin`      |
+| GET    | `/api/candidaturas`        | Autenticado                   |
+| POST   | `/api/candidaturas`        | `aluno` ou `admin`            |
+| GET    | `/api/candidaturas/:idAluno/:idVaga` | Autenticado          |
+| PUT    | `/api/candidaturas/:idAluno/:idVaga` | `pesquisador` ou `admin` |
+| DELETE | `/api/candidaturas/:idAluno/:idVaga` | `aluno` ou `admin`   |
+| GET    | `/api/relatorios/projetos` | Público                       |
+| GET    | `/api/relatorios/publicacoes` | Público                    |
+| GET    | `/api/relatorios/grupos`   | Público                       |
 
 A lista de rotas públicas (as que passam sem token) fica centralizada em
 `backend/src/config/seguranca.js`; qualquer rota fora dela exige o cabeçalho
@@ -240,6 +337,7 @@ database/
   init/
     01-schema.sql
     02-seed.sql
+    03-views.sql
   docs/
     diagrama-logico-uml.png
     diagrama-logico.mermaid

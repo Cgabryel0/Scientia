@@ -64,6 +64,53 @@ export async function cadastrar(dados, usuario) {
   }
 }
 
+export async function atualizar(valorId, dados, usuario) {
+  const id = validarId(valorId);
+  const dadosGrupo = dados ?? {};
+  validarTiposDoGrupo(dadosGrupo);
+  const grupo = normalizarGrupo(dadosGrupo);
+  validarDadosDoGrupo(grupo);
+
+  try {
+    await transacao(async (cliente) => {
+      await resolverPesquisadorAutenticado(usuario, cliente);
+
+      if (!(await repositorioGrupos.existe(id, cliente))) {
+        throw new ErroHttp(404, 'Grupo não encontrado.');
+      }
+
+      await repositorioGrupos.atualizar(cliente, id, grupo);
+    });
+
+    return buscarPorId(id);
+  } catch (err) {
+    tratarConflitoUnicoGrupo(err);
+    throw err;
+  }
+}
+
+export async function excluir(valorId, usuario) {
+  const id = validarId(valorId);
+
+  try {
+    await transacao(async (cliente) => {
+      await resolverPesquisadorAutenticado(usuario, cliente);
+
+      if (!(await repositorioGrupos.existe(id, cliente))) {
+        throw new ErroHttp(404, 'Grupo não encontrado.');
+      }
+
+      await repositorioGrupos.excluir(cliente, id);
+    });
+  } catch (err) {
+    if (err.code === '23503' && err.constraint === 'fk_projeto_grupo') {
+      throw new ErroHttp(409, 'Não é possível excluir um grupo que possui projetos.');
+    }
+
+    throw err;
+  }
+}
+
 function validarTiposDoGrupo(dados) {
   const textoInvalido = CAMPOS_TEXTO_GRUPO.some(
     (campo) => dados[campo] != null && typeof dados[campo] !== 'string',
