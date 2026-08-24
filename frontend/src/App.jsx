@@ -10,6 +10,7 @@ import { DetalheProjeto } from './paginas/DetalheProjeto.jsx';
 import { EditarProjeto } from './paginas/EditarProjeto.jsx';
 import { EditarPublicacao } from './paginas/EditarPublicacao.jsx';
 import { Grupos } from './paginas/Grupos.jsx';
+import { FormularioGrupo } from './paginas/FormularioGrupo.jsx';
 import { Login } from './paginas/Login.jsx';
 import { Painel } from './paginas/Painel.jsx';
 import { Projetos } from './paginas/Projetos.jsx';
@@ -43,6 +44,8 @@ export function App() {
             <Route path="/projetos/cadastro" element={<CadastroProjeto />} />
             <Route path="/projetos/:id/editar" element={<EditarProjeto />} />
             <Route path="/publicacoes/:id/editar" element={<EditarPublicacao />} />
+            <Route path="/grupos/cadastro" element={<FormularioGrupo />} />
+            <Route path="/grupos/:id/editar" element={<FormularioGrupo />} />
           </Route>
 
           <Route element={<RotaProtegida tipos={['admin']} />}>
