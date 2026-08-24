@@ -25,7 +25,10 @@ export function Cabecalho() {
         <NavLink to="/publicacoes">Publicações</NavLink>
         <NavLink to="/projetos">Projetos</NavLink>
         <NavLink to="/grupos">Grupos</NavLink>
+        <NavLink to="/vagas">Vagas</NavLink>
+        <NavLink to="/relatorios">Relatórios</NavLink>
         {usuario && <NavLink to="/painel">Painel</NavLink>}
+        {usuario && <NavLink to="/candidaturas">Candidaturas</NavLink>}
         {/* O link só aparece para o admin, mas quem barra o acesso de verdade
             é o guard da rota e o backend. */}
         {usuario?.tipo === 'admin' && <NavLink to="/usuarios">Usuários</NavLink>}

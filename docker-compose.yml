@@ -19,5 +19,45 @@ services:
       timeout: 5s
       retries: 12
 
+  backend:
+    build:
+      context: ./backend
+    container_name: scientia-backend
+    restart: unless-stopped
+    environment:
+      PORTA: 3000
+      ORIGEM_FRONTEND: http://localhost:5173
+      DATABASE_URL: postgres://scientia:scientia@db:5432/scientia
+      BANCO_SSL: "false"
+      JWT_SECRET: scientia-docker-desenvolvimento
+      JWT_EXPIRACAO: 2h
+      ADMIN_NOME: Administrador
+      ADMIN_EMAIL: admin@scientia.ufape.br
+      ADMIN_SENHA: admin123
+      TZ: America/Recife
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/status').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    container_name: scientia-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   scientia_pgdata:
