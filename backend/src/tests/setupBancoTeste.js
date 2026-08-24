@@ -6,6 +6,7 @@ import pg from 'pg';
 const { Pool } = pg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const caminhoSchema = resolve(__dirname, '../../../database/init/01-schema.sql');
+const caminhoViews = resolve(__dirname, '../../../database/init/03-views.sql');
 const cursosMinimos = [
   'Bacharelado em Ciência da Computação',
   'Licenciatura em Computação',
@@ -86,6 +87,7 @@ const publicacoesAcervo = [
 export async function prepararBancoTeste() {
   await garantirBancoTeste();
   await aplicarSchemaSeNecessario();
+  await aplicarViews();
 }
 
 export async function reiniciarBancoTeste() {
@@ -290,6 +292,17 @@ async function aplicarSchemaSeNecessario() {
       const schema = await readFile(caminhoSchema, 'utf8');
       await pool.query(schema);
     }
+  } finally {
+    await pool.end();
+  }
+}
+
+async function aplicarViews() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+  try {
+    const views = await readFile(caminhoViews, 'utf8');
+    await pool.query(views);
   } finally {
     await pool.end();
   }
