@@ -63,6 +63,21 @@ export async function buscarPorId(id) {
   return publicacao;
 }
 
+export async function existe(id, executor) {
+  const { rows } = await executarConsulta(
+    executor,
+    `
+      SELECT 1
+      FROM publicacao
+      WHERE id_publicacao = $1
+      LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows.length > 0;
+}
+
 export async function criar(executor, { titulo, tipo, ano, doi, veiculo, idProjeto }) {
   const { rows } = await executor.query(
     `
@@ -74,6 +89,51 @@ export async function criar(executor, { titulo, tipo, ano, doi, veiculo, idProje
   );
 
   return rows[0].id_publicacao;
+}
+
+export async function atualizar(
+  executor,
+  idPublicacao,
+  { titulo, tipo, ano, doi, veiculo, idProjeto },
+) {
+  const resultado = await executor.query(
+    `
+      UPDATE publicacao
+      SET
+        id_projeto = $2,
+        tipo = $3,
+        ano = $4,
+        doi = $5,
+        veiculo = $6,
+        titulo = $7
+      WHERE id_publicacao = $1
+    `,
+    [idPublicacao, idProjeto, tipo, ano, doi, veiculo, titulo],
+  );
+
+  return resultado.rowCount > 0;
+}
+
+export async function removerAutorias(executor, idPublicacao) {
+  await executor.query(
+    `
+      DELETE FROM autoria
+      WHERE id_publicacao = $1
+    `,
+    [idPublicacao],
+  );
+}
+
+export async function excluir(executor, idPublicacao) {
+  const resultado = await executor.query(
+    `
+      DELETE FROM publicacao
+      WHERE id_publicacao = $1
+    `,
+    [idPublicacao],
+  );
+
+  return resultado.rowCount > 0;
 }
 
 export async function criarAutoria(executor, { idPublicacao, idPesquisador, ordem }) {
@@ -204,4 +264,12 @@ function mapearPublicacao(linha) {
     },
     autores: [],
   };
+}
+
+function executarConsulta(executor, sql, parametros) {
+  if (executor) {
+    return executor.query(sql, parametros);
+  }
+
+  return consultar(sql, parametros);
 }

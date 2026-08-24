@@ -8,5 +8,7 @@ const rotas = Router();
 rotas.get('/', publicacaoController.listar);
 rotas.post('/', exigeTipo('pesquisador', 'admin'), publicacaoController.cadastrar);
 rotas.get('/:id', publicacaoController.detalhar);
+rotas.put('/:id', exigeTipo('pesquisador', 'admin'), publicacaoController.atualizar);
+rotas.delete('/:id', exigeTipo('pesquisador', 'admin'), publicacaoController.excluir);
 
 export default rotas;

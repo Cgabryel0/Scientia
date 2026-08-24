@@ -12,7 +12,7 @@ import {
 } from '../utils/acervo.js';
 
 export function Publicacoes() {
-  const { usuario } = useAuth();
+  const { usuario, token } = useAuth();
 
   const [publicacoes, setPublicacoes] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
@@ -74,6 +74,19 @@ export function Publicacoes() {
     setTipo('');
     setAno('');
     setPagina(1);
+  }
+
+  async function excluirPublicacao(publicacao) {
+    if (!window.confirm(`Excluir a publicação "${publicacao.titulo}"?`)) {
+      return;
+    }
+
+    try {
+      await publicacaoService.excluir(publicacao.id, token);
+      setPublicacoes((atuais) => atuais.filter((item) => item.id !== publicacao.id));
+    } catch (falha) {
+      setErro(falha.message);
+    }
   }
 
   return (
@@ -182,6 +195,13 @@ export function Publicacoes() {
                 >
                   DOI: {publicacao.doi}
                 </a>
+              )}
+
+              {podeCadastrarNoAcervo(usuario) && (
+                <div className="acoes-registro">
+                  <Link className="botao botao--discreto" to={`/publicacoes/${publicacao.id}/editar`}>Editar</Link>
+                  <button type="button" className="botao botao--discreto" onClick={() => excluirPublicacao(publicacao)}>Excluir</button>
+                </div>
               )}
             </li>
           ))}

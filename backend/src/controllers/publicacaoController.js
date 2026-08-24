@@ -19,3 +19,13 @@ export async function cadastrar(req, res) {
   const publicacao = await publicacaoService.cadastrar(req.body ?? {}, req.usuario);
   res.status(201).json({ publicacao: publicacaoResposta(publicacao) });
 }
+
+export async function atualizar(req, res) {
+  const publicacao = await publicacaoService.atualizar(req.params.id, req.body ?? {}, req.usuario);
+  res.json({ publicacao: publicacaoResposta(publicacao) });
+}
+
+export async function excluir(req, res) {
+  await publicacaoService.excluir(req.params.id, req.usuario);
+  res.status(204).end();
+}

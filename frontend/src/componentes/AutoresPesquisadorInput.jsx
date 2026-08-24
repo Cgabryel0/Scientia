@@ -13,8 +13,10 @@ const AUTOR_NOVO_INICIAL = {
   email: '',
 };
 
-export function AutoresPesquisadorInput({ aoAlterar }) {
-  const [autores, setAutores] = useState([]);
+export function AutoresPesquisadorInput({ aoAlterar, autoresIniciais = [] }) {
+  const [autores, setAutores] = useState(() =>
+    autoresIniciais.map((autor) => ({ ...autor, novo: false })),
+  );
   const [busca, setBusca] = useState('');
   const [buscaAplicada, setBuscaAplicada] = useState('');
   const [encontrados, setEncontrados] = useState([]);
@@ -144,8 +146,8 @@ export function AutoresPesquisadorInput({ aoAlterar }) {
               <div className="editor-autores__dados">
                 <strong>{autor.nome}</strong>
                 <span className="seletor-busca__detalhe">
-                  {ROTULOS_VINCULO[autor.vinculo] ?? autor.vinculo}
-                  {autor.novo ? ` · novo · Lattes ${autor.numeroLattes}` : ' · já cadastrado'}
+                  {autor.vinculo && `${ROTULOS_VINCULO[autor.vinculo] ?? autor.vinculo} · `}
+                  {autor.novo ? `novo · Lattes ${autor.numeroLattes}` : 'já cadastrado'}
                 </span>
               </div>
 

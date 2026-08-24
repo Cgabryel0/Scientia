@@ -8,6 +8,7 @@ import { CadastroPublicacao } from './paginas/CadastroPublicacao.jsx';
 import { DetalheGrupo } from './paginas/DetalheGrupo.jsx';
 import { DetalheProjeto } from './paginas/DetalheProjeto.jsx';
 import { EditarProjeto } from './paginas/EditarProjeto.jsx';
+import { EditarPublicacao } from './paginas/EditarPublicacao.jsx';
 import { Grupos } from './paginas/Grupos.jsx';
 import { Login } from './paginas/Login.jsx';
 import { Painel } from './paginas/Painel.jsx';
@@ -41,6 +42,7 @@ export function App() {
             <Route path="/publicacoes/cadastro" element={<CadastroPublicacao />} />
             <Route path="/projetos/cadastro" element={<CadastroProjeto />} />
             <Route path="/projetos/:id/editar" element={<EditarProjeto />} />
+            <Route path="/publicacoes/:id/editar" element={<EditarPublicacao />} />
           </Route>
 
           <Route element={<RotaProtegida tipos={['admin']} />}>
