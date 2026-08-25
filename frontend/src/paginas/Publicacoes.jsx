@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Paginacao } from '../componentes/Paginacao.jsx';
 import { useAuth } from '../contexto/AuthContext.jsx';
 import * as publicacaoService from '../servicos/publicacaoService.js';
+import * as areaService from '../servicos/areaService.js';
 import {
   nomesDosAutores,
   podeCadastrarNoAcervo,
@@ -11,10 +12,11 @@ import {
   ROTULOS_TIPO,
 } from '../utils/acervo.js';
 
-export function Publicacoes() {
+export function Publicacoes({ idPesquisadorFixo }) {
   const { usuario, token } = useAuth();
 
   const [publicacoes, setPublicacoes] = useState([]);
+  const [areasConhecimento, setAreasConhecimento] = useState([]);
   const [paginacao, setPaginacao] = useState(null);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -22,9 +24,16 @@ export function Publicacoes() {
   const [busca, setBusca] = useState('');
   const [tipo, setTipo] = useState('');
   const [ano, setAno] = useState('');
+  const [idArea, setIdArea] = useState('');
   const [pagina, setPagina] = useState(1);
 
   const [buscaAplicada, setBuscaAplicada] = useState('');
+
+  useEffect(() => {
+    let atual = true;
+    areaService.listar().then((dados) => atual && setAreasConhecimento(dados.areas));
+    return () => { atual = false; };
+  }, []);
 
   useEffect(() => {
     const temporizador = setTimeout(() => {
@@ -40,8 +49,13 @@ export function Publicacoes() {
     setCarregando(true);
     setErro('');
 
+    const filtros = { busca: buscaAplicada, tipo, ano, idArea, pagina, porPagina: POR_PAGINA };
+    if (idPesquisadorFixo) {
+      filtros.idPesquisador = idPesquisadorFixo;
+    }
+
     publicacaoService
-      .listar({ busca: buscaAplicada, tipo, ano, pagina, porPagina: POR_PAGINA })
+      .listar(filtros)
       .then((dados) => {
         if (!atual) {
           return;
@@ -55,9 +69,9 @@ export function Publicacoes() {
     return () => {
       atual = false;
     };
-  }, [buscaAplicada, tipo, ano, pagina]);
+  }, [buscaAplicada, tipo, ano, idArea, pagina, idPesquisadorFixo]);
 
-  const filtrosAtivos = Boolean(buscaAplicada.trim() || tipo || ano);
+  const filtrosAtivos = Boolean(buscaAplicada.trim() || tipo || ano || idArea);
 
   function trocarTipo(evento) {
     setTipo(evento.target.value);
@@ -69,10 +83,25 @@ export function Publicacoes() {
     setPagina(1);
   }
 
+  function trocarArea(evento) {
+    setIdArea(evento.target.value);
+    setPagina(1);
+  }
+
+  function limparBusca() {
+    setBusca('');
+    setBuscaAplicada('');
+    setTipo('');
+    setAno('');
+    setIdArea('');
+    setPagina(1);
+  }
+
   function limparFiltros() {
     setBusca('');
     setTipo('');
     setAno('');
+    setIdArea('');
     setPagina(1);
   }
 
@@ -90,21 +119,20 @@ export function Publicacoes() {
   }
 
   return (
-    <section>
-      <div className="pagina__cabecalho">
-        <div>
-          <h1 className="pagina__titulo">Publicações</h1>
-          <p className="pagina__descricao">
-            Consulte as publicações produzidas pelos projetos de pesquisa do BCC.
-          </p>
-        </div>
+    <section className="pagina">
+      {!idPesquisadorFixo && (
+        <div className="pagina__cabecalho">
+          <div className="pagina__titulo">
+            <h1>Publicações</h1>
+          </div>
 
-        {podeCadastrarNoAcervo(usuario) && (
-          <Link to="/publicacoes/cadastro" className="botao botao--primario botao--compacto">
-            Cadastrar publicação
-          </Link>
-        )}
-      </div>
+          {podeCadastrarNoAcervo(usuario) && (
+            <Link to="/publicacoes/cadastro" className="botao botao--primario botao--compacto">
+              Cadastrar publicação
+            </Link>
+          )}
+        </div>
+      )}
 
       <form className="filtros-acervo" onSubmit={(evento) => evento.preventDefault()}>
         <label className="campo filtros-acervo__busca">
@@ -115,6 +143,18 @@ export function Publicacoes() {
             onChange={(evento) => setBusca(evento.target.value)}
             placeholder="Título ou autor"
           />
+        </label>
+
+        <label className="campo">
+          <span>Área</span>
+          <select value={idArea} onChange={trocarArea}>
+            <option value="">Todas</option>
+            {areasConhecimento.map((area) => (
+              <option key={area.id} value={area.id}>
+                {area.nome}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="campo">

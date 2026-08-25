@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { AutoresPesquisadorInput } from '../componentes/AutoresPesquisadorInput.jsx';
 import { SeletorProjeto } from '../componentes/SeletorProjeto.jsx';
 import { useAuth } from '../contexto/AuthContext.jsx';
+import * as areaService from '../servicos/areaService.js';
 import * as publicacaoService from '../servicos/publicacaoService.js';
 import { ROTULOS_TIPO } from '../utils/acervo.js';
 import { validarPublicacao } from '../utils/validacaoPublicacao.js';
@@ -23,8 +24,31 @@ export function CadastroPublicacao() {
   const [dados, setDados] = useState(DADOS_INICIAIS);
   const [idProjeto, setIdProjeto] = useState(null);
   const [autores, setAutores] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [areasEscolhidas, setAreasEscolhidas] = useState([]);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  useEffect(() => {
+    let atual = true;
+
+    areaService
+      .listar()
+      .then((resposta) => atual && setAreas(resposta.areas))
+      .catch(() => {});
+
+    return () => {
+      atual = false;
+    };
+  }, []);
+
+  function alternarArea(idArea) {
+    setAreasEscolhidas((anteriores) =>
+      anteriores.includes(idArea)
+        ? anteriores.filter((escolhida) => escolhida !== idArea)
+        : [...anteriores, idArea],
+    );
+  }
 
   function alterar(evento) {
     const { name, value } = evento.target;
@@ -42,6 +66,7 @@ export function CadastroPublicacao() {
       veiculo: dados.veiculo.trim(),
       idProjeto,
       autores,
+      areas: areasEscolhidas,
     };
 
     const problemas = validarPublicacao(corpo);
@@ -132,9 +157,30 @@ export function CadastroPublicacao() {
           />
         </label>
 
-        <SeletorProjeto aoSelecionar={setIdProjeto} />
+        <fieldset className="selecao-areas">
+          <legend>Áreas de pesquisa</legend>
+          <ul className="lista-chips">
+            {areas.map((area) => (
+              <li key={area.id}>
+                <label
+                  className={`chip chip--escolha${
+                    areasEscolhidas.includes(area.id) ? ' chip--marcado' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={areasEscolhidas.includes(area.id)}
+                    onChange={() => alternarArea(area.id)}
+                  />
+                  {area.nome}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
 
-        <AutoresPesquisadorInput aoAlterar={setAutores} />
+        <SeletorProjeto idProjeto={idProjeto} aoSelecionar={setIdProjeto} />
+        <AutoresPesquisadorInput autores={autores} aoAlterar={setAutores} />
 
         <div className="formulario-acervo__acoes">
           <Link to="/publicacoes" className="botao botao--discreto">

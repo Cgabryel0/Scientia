@@ -112,7 +112,7 @@ export const CORPO_NOVA_PUBLICACAO = {
   ano: 2024,
   doi: '10.1000/exemplo.1',
   veiculo: 'Revista Brasileira de Computação',
-  idProjeto: 3,
+  idProjeto: 3, areas: [],
   autores: [
     { id: 91 },
     { nome: 'Bruno Lima', numeroLattes: '9876543210987654', vinculo: 'docente', email: '' },

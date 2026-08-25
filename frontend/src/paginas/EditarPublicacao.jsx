@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AutoresPesquisadorInput } from '../componentes/AutoresPesquisadorInput.jsx';
 import { useAuth } from '../contexto/AuthContext.jsx';
+import * as areaService from '../servicos/areaService.js';
 import * as projetoService from '../servicos/projetoService.js';
 import * as publicacaoService from '../servicos/publicacaoService.js';
 import { ROTULOS_TIPO } from '../utils/acervo.js';
@@ -15,14 +16,20 @@ export function EditarPublicacao() {
   const [dados, setDados] = useState(null);
   const [autores, setAutores] = useState([]);
   const [projetos, setProjetos] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [areasEscolhidas, setAreasEscolhidas] = useState([]);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     let atual = true;
 
-    Promise.all([publicacaoService.buscarPorId(id), projetoService.listar({ porPagina: 100 })])
-      .then(([respostaPublicacao, respostaProjetos]) => {
+    Promise.all([
+      publicacaoService.buscarPorId(id),
+      projetoService.listar({ porPagina: 100 }),
+      areaService.listar()
+    ])
+      .then(([respostaPublicacao, respostaProjetos, respostaAreas]) => {
         if (!atual) {
           return;
         }
@@ -37,7 +44,9 @@ export function EditarPublicacao() {
           idProjeto: String(publicacao.projeto.id),
         });
         setAutores(publicacao.autores);
+        setAreasEscolhidas((publicacao.areas || []).map((a) => a.id));
         setProjetos(respostaProjetos.projetos);
+        setAreas(respostaAreas.areas);
       })
       .catch((falha) => atual && setErro(falha.message));
 
@@ -45,6 +54,14 @@ export function EditarPublicacao() {
       atual = false;
     };
   }, [id]);
+
+  function alternarArea(idArea) {
+    setAreasEscolhidas((anteriores) =>
+      anteriores.includes(idArea)
+        ? anteriores.filter((escolhida) => escolhida !== idArea)
+        : [...anteriores, idArea],
+    );
+  }
 
   function alterar(evento) {
     const { name, value } = evento.target;
@@ -71,6 +88,7 @@ export function EditarPublicacao() {
               email: autor.email ?? '',
             },
       ),
+      areas: areasEscolhidas,
     };
     const problemas = validarPublicacao(corpo);
 
@@ -156,6 +174,28 @@ export function EditarPublicacao() {
               ))}
             </select>
           </label>
+
+          <fieldset className="selecao-areas">
+            <legend>Áreas de pesquisa</legend>
+            <ul className="lista-chips">
+              {areas.map((area) => (
+                <li key={area.id}>
+                  <label
+                    className={`chip chip--escolha${
+                      areasEscolhidas.includes(area.id) ? ' chip--marcado' : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={areasEscolhidas.includes(area.id)}
+                      onChange={() => alternarArea(area.id)}
+                    />
+                    {area.nome}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
 
           <AutoresPesquisadorInput autoresIniciais={autores} aoAlterar={setAutores} />
 

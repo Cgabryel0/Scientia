@@ -15,6 +15,7 @@ import { FormularioGrupo } from './paginas/FormularioGrupo.jsx';
 import { FormularioVaga } from './paginas/FormularioVaga.jsx';
 import { Login } from './paginas/Login.jsx';
 import { Painel } from './paginas/Painel.jsx';
+import { PerfilPesquisador } from './paginas/PerfilPesquisador.jsx';
 import { Projetos } from './paginas/Projetos.jsx';
 import { Publicacoes } from './paginas/Publicacoes.jsx';
 import { Relatorios } from './paginas/Relatorios.jsx';
@@ -34,6 +35,7 @@ export function App() {
         <Route path="/projetos/:id" element={<DetalheProjeto />} />
         <Route path="/grupos" element={<Grupos />} />
         <Route path="/grupos/:id" element={<DetalheGrupo />} />
+        <Route path="/pesquisadores/:id" element={<PerfilPesquisador />} />
         <Route path="/vagas" element={<Vagas />} />
         <Route path="/relatorios" element={<Relatorios />} />
       </Route>

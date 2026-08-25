@@ -6,6 +6,10 @@ import { CadastroPublicacao } from '../paginas/CadastroPublicacao.jsx';
 import * as pesquisadorService from '../servicos/pesquisadorService.js';
 import * as projetoService from '../servicos/projetoService.js';
 import * as publicacaoService from '../servicos/publicacaoService.js';
+
+vi.mock('../servicos/areaService.js', () => ({
+  listar: vi.fn().mockResolvedValue({ areas: [] })
+}));
 import {
   CORPO_NOVA_PUBLICACAO,
   RESPOSTA_PESQUISADORES,
