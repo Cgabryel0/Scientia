@@ -6,6 +6,10 @@ import { EditarPublicacao } from '../paginas/EditarPublicacao.jsx';
 import * as projetoService from '../servicos/projetoService.js';
 import * as publicacaoService from '../servicos/publicacaoService.js';
 
+vi.mock('../servicos/areaService.js', () => ({
+  listar: vi.fn().mockResolvedValue({ areas: [] })
+}));
+
 vi.mock('../servicos/projetoService.js', () => ({
   listar: vi.fn(),
 }));

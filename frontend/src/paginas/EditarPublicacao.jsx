@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AutoresPesquisadorInput } from '../componentes/AutoresPesquisadorInput.jsx';
 import { useAuth } from '../contexto/AuthContext.jsx';
+import * as areaService from '../servicos/areaService.js';
 import * as projetoService from '../servicos/projetoService.js';
 import * as publicacaoService from '../servicos/publicacaoService.js';
 import { ROTULOS_TIPO } from '../utils/acervo.js';
@@ -26,7 +27,7 @@ export function EditarPublicacao() {
     Promise.all([
       publicacaoService.buscarPorId(id),
       projetoService.listar({ porPagina: 100 }),
-      import('../servicos/areaService.js').then((m) => m.listar())
+      areaService.listar()
     ])
       .then(([respostaPublicacao, respostaProjetos, respostaAreas]) => {
         if (!atual) {

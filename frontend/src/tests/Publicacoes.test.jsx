@@ -6,6 +6,10 @@ import { Publicacoes } from '../paginas/Publicacoes.jsx';
 import * as publicacaoService from '../servicos/publicacaoService.js';
 import { RESPOSTA_PUBLICACOES } from './fixturesAcervo.js';
 
+vi.mock('../servicos/areaService.js', () => ({
+  listar: vi.fn().mockResolvedValue({ areas: [] })
+}));
+
 vi.mock('../servicos/publicacaoService.js', () => ({
   listar: vi.fn(),
 }));
@@ -112,6 +116,7 @@ describe('Tela de publicações', () => {
       busca: '',
       tipo: 'capitulo',
       ano: '',
+      idArea: '',
       pagina: 1,
       porPagina: 20,
     });
@@ -137,6 +142,7 @@ describe('Tela de publicações', () => {
       busca: 'agreste',
       tipo: '',
       ano: '',
+      idArea: '',
       pagina: 1,
       porPagina: 20,
     });
@@ -155,6 +161,7 @@ describe('Tela de publicações', () => {
       busca: '',
       tipo: '',
       ano: '',
+      idArea: '',
       pagina: 2,
       porPagina: 20,
     });

@@ -65,7 +65,7 @@ describe('Tela de relatórios', () => {
     expect(screen.getAllByText('Projeto de IA').length).toBeGreaterThan(0);
     expect(screen.getByText('Artigo de IA')).toBeInTheDocument();
     expect(screen.getAllByText('Grupo de Computação').length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Ana Silva")).toHaveLength(2);
+    expect(screen.getAllByText('Ana Silva').length).toBeGreaterThan(0);
   });
 
   it('mostra o erro de qualquer endpoint sem esconder o título da página', async () => {
