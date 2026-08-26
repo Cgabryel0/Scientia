@@ -149,6 +149,16 @@ CREATE TABLE possui_area (
         REFERENCES area_conhecimento (id_area) ON DELETE RESTRICT
 );
 
+CREATE TABLE area_publicacao (
+    id_publicacao INT NOT NULL,
+    id_area       INT NOT NULL,
+    CONSTRAINT pk_area_publicacao PRIMARY KEY (id_publicacao, id_area),
+    CONSTRAINT fk_area_publicacao_publicacao FOREIGN KEY (id_publicacao)
+        REFERENCES publicacao (id_publicacao) ON DELETE CASCADE,
+    CONSTRAINT fk_area_publicacao_area FOREIGN KEY (id_area)
+        REFERENCES area_conhecimento (id_area) ON DELETE RESTRICT
+);
+
 CREATE TABLE autoria (
     id_pesquisador  INT NOT NULL,
     id_publicacao   INT NOT NULL,
@@ -186,5 +196,6 @@ CREATE INDEX idx_vaga_status ON vaga (status);
 CREATE INDEX idx_membro_grupo ON membro (id_grupo);
 CREATE INDEX idx_participacao_projeto ON participacao (id_projeto);
 CREATE INDEX idx_possui_area_area ON possui_area (id_area);
+CREATE INDEX idx_area_publicacao_area ON area_publicacao (id_area);
 CREATE INDEX idx_autoria_publicacao ON autoria (id_publicacao);
 CREATE INDEX idx_candidatura_vaga ON candidatura (id_vaga);

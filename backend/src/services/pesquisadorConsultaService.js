@@ -1,6 +1,7 @@
+import { ErroHttp } from '../erros/ErroHttp.js';
 import * as repositorioPesquisadores from '../models/repositorioPesquisadores.js';
 import { LISTA_VINCULOS_PESQUISADOR } from '../models/vinculosPesquisador.js';
-import { validarEnumOpcional, validarPaginacao } from './consultaParametrosService.js';
+import { validarEnumOpcional, validarId, validarPaginacao } from './consultaParametrosService.js';
 
 export async function listar(filtros) {
   const paginacao = validarPaginacao(filtros);
@@ -24,4 +25,15 @@ export async function listar(filtros) {
       total: resultado.total,
     },
   };
+}
+
+export async function buscarPorId(valorId) {
+  const id = validarId(valorId);
+
+  const pesquisador = await repositorioPesquisadores.buscarPorId(id);
+  if (!pesquisador) {
+    throw new ErroHttp(404, 'Pesquisador não encontrado.');
+  }
+
+  return pesquisador;
 }
