@@ -400,6 +400,13 @@ SELECT
 FROM vaga v
 CROSS JOIN generate_series(0, 2) AS s(k);
 
+INSERT INTO area_publicacao (id_publicacao, id_area)
+SELECT
+    pb.id_publicacao,
+    1 + ((pb.id_publicacao * 7 + k * 13) % 24)
+FROM publicacao pb
+CROSS JOIN generate_series(0, 1) AS s(k);
+
 SELECT setval(pg_get_serial_sequence('curso', 'id_curso'), (SELECT MAX(id_curso) FROM curso));
 SELECT setval(pg_get_serial_sequence('conta', 'id_conta'), (SELECT MAX(id_conta) FROM conta));
 SELECT setval(pg_get_serial_sequence('aluno', 'id_aluno'), (SELECT MAX(id_aluno) FROM aluno));

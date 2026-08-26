@@ -118,6 +118,7 @@ const publicacaoArtigoFixture = {
     { id: 91, nome: 'Zuleica Souza', ordem: 1 },
     { id: 104, nome: 'Bruno Lima', ordem: 2 },
   ],
+  areas: [{ id: 1, nome: 'Ciência da Computação' }],
 };
 
 const projetoComputacaoFixture = {
@@ -531,6 +532,10 @@ describe('Acervo público', () => {
   it('/api/publicacoes aplica busca, ano e paginação', async () => {
     const busca = await request(app).get('/api/publicacoes?busca=Carla');
     const ano = await request(app).get('/api/publicacoes?ano=2025');
+    const area = await request(app).get('/api/publicacoes?idArea=1');
+    const pesquisador = await request(app).get('/api/publicacoes?idPesquisador=104');
+    const pesquisadorEArea = await request(app).get('/api/publicacoes?idPesquisador=104&idArea=1');
+    const areaSemPublicacao = await request(app).get('/api/publicacoes?idArea=999');
     const pagina = await request(app).get('/api/publicacoes?pagina=2&porPagina=2');
 
     assert.strictEqual(busca.status, 200);
@@ -544,6 +549,24 @@ describe('Acervo público', () => {
       ano.body.publicacoes.map((publicacao) => publicacao.id),
       [2],
     );
+    assert.strictEqual(area.status, 200);
+    assert.deepStrictEqual(
+      area.body.publicacoes.map((publicacao) => publicacao.id),
+      [1, 3],
+    );
+    assert.strictEqual(pesquisador.status, 200);
+    assert.deepStrictEqual(
+      pesquisador.body.publicacoes.map((publicacao) => publicacao.id),
+      [2, 1],
+    );
+    assert.strictEqual(pesquisadorEArea.status, 200);
+    assert.deepStrictEqual(
+      pesquisadorEArea.body.publicacoes.map((publicacao) => publicacao.id),
+      [1],
+    );
+    assert.strictEqual(areaSemPublicacao.status, 200);
+    assert.deepStrictEqual(areaSemPublicacao.body.publicacoes, []);
+    assert.deepStrictEqual(areaSemPublicacao.body.paginacao, { pagina: 1, porPagina: 20, total: 0 });
     assert.deepStrictEqual(ano.body.publicacoes[0].autores, [
       { id: 104, nome: 'Bruno Lima', ordem: 1 },
       { id: 117, nome: 'Carla Rocha', ordem: 2 },
@@ -557,9 +580,40 @@ describe('Acervo público', () => {
     assert.deepStrictEqual(pagina.body.paginacao, { pagina: 2, porPagina: 2, total: 3 });
   });
 
+  it('/api/publicacoes por área mantém ordenação por ano e id sem duplicar publicações', async () => {
+    await consultar(
+      `
+        INSERT INTO publicacao (id_publicacao, id_projeto, tipo, ano, doi, veiculo, titulo)
+        VALUES
+          (10, 3, 'artigo', 2025, '10.1000/ordem-area-10', 'Revista de Testes', 'Publicação área 10'),
+          (11, 3, 'artigo', 2025, '10.1000/ordem-area-11', 'Revista de Testes', 'Publicação área 11')
+      `,
+    );
+    await consultar(
+      `
+        INSERT INTO autoria (id_pesquisador, id_publicacao, ordem)
+        VALUES (91, 10, 1), (104, 11, 1)
+      `,
+    );
+    await consultar(
+      `
+        INSERT INTO area_publicacao (id_publicacao, id_area)
+        VALUES (10, 1), (10, 2), (11, 1)
+      `,
+    );
+
+    const resposta = await request(app).get('/api/publicacoes?idArea=1&porPagina=100');
+
+    assert.strictEqual(resposta.status, 200);
+    const ids = resposta.body.publicacoes.map((publicacao) => publicacao.id);
+    assert.deepStrictEqual(ids, [11, 10, 1, 3]);
+    assert.strictEqual(new Set(ids).size, ids.length);
+  });
+
   it('/api/publicacoes valida filtros e inexistência', async () => {
     const tipo = await request(app).get('/api/publicacoes?tipo=tcc');
     const ano = await request(app).get('/api/publicacoes?ano=abc');
+    const idArea = await request(app).get('/api/publicacoes?idArea=abc');
     const porPagina = await request(app).get('/api/publicacoes?porPagina=101');
     const inexistente = await request(app).get('/api/publicacoes/999');
 
@@ -567,6 +621,8 @@ describe('Acervo público', () => {
     assert.strictEqual(tipo.body.mensagem, 'O tipo deve ser artigo, capítulo ou resumo.');
     assert.strictEqual(ano.status, 400);
     assert.strictEqual(ano.body.mensagem, 'O ano deve ser um número inteiro.');
+    assert.strictEqual(idArea.status, 400);
+    assert.strictEqual(idArea.body.mensagem, 'O id da área deve ser um número inteiro.');
     assert.strictEqual(porPagina.status, 400);
     assert.strictEqual(porPagina.body.mensagem, 'A quantidade por página deve ser um número inteiro entre 1 e 100.');
     assert.strictEqual(inexistente.status, 404);
@@ -779,6 +835,7 @@ describe('Cadastro do acervo', () => {
           { id: 91 },
           { nome: 'Bruno Manual', numeroLattes: '9876543210987654', vinculo: 'docente' },
         ],
+        areas: [1],
       });
 
     assert.strictEqual(resposta.status, 201);
@@ -793,6 +850,7 @@ describe('Cadastro do acervo', () => {
         { nome: 'Bruno Manual', ordem: 2 },
       ],
     );
+    assert.deepStrictEqual(resposta.body.publicacao.areas, [{ id: 1, nome: 'Ciência da Computação' }]);
 
     const autorNovo = await consultar(
       `
@@ -966,6 +1024,7 @@ describe('Cadastro do acervo', () => {
       [{ ...base, veiculo: 'x'.repeat(151) }, 'O veículo deve ter no máximo 150 caracteres.'],
       [{ ...base, doi: 'x'.repeat(101) }, 'O DOI deve ter no máximo 100 caracteres.'],
       [{ ...base, idProjeto: 999 }, 'Projeto não encontrado.'],
+      [{ ...base, areas: [999] }, 'Área não encontrada.'],
       [{ ...base, autores: [] }, 'Informe ao menos um autor.'],
       [{ ...base, autores: [{ id: 999 }] }, 'Autor não encontrado.'],
       [{ ...base, autores: [{ id: 91, nome: 'Ambíguo', numeroLattes: '1', vinculo: 'docente' }] }, 'Informe um autor existente ou os dados de um autor novo.'],
@@ -1008,6 +1067,8 @@ describe('Cadastro do acervo', () => {
       },
       { ...base, autores: [null] },
       { ...base, autores: [{ id: 91 }, null] },
+      { ...base, areas: '1' },
+      { ...base, areas: ['1'] },
     ];
 
     for (const payload of casos) {
@@ -1068,6 +1129,7 @@ describe('Cadastro do acervo', () => {
         veiculo: 'Revista de Integração Científica',
         idProjeto: 3,
         autores: [{ id: idAutorPrincipal }, { id: idCoautor }],
+        areas: [1],
       });
 
     assert.strictEqual(cadastro.status, 201);
@@ -1090,6 +1152,36 @@ describe('Cadastro do acervo', () => {
       ['10.1000/coautoria-compartilhada'],
     );
     assert.strictEqual(quantidade.rows[0].total, 1);
+  });
+
+  it('remove áreas repetidas antes de gravar a publicação', async () => {
+    const token = await tokenPesquisadorTeste();
+
+    const resposta = await request(app)
+      .post('/api/publicacoes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        titulo: 'Publicação com áreas sem repetição',
+        tipo: 'artigo',
+        ano: 2026,
+        doi: '10.1000/areas-sem-repeticao',
+        veiculo: 'Revista de Testes',
+        idProjeto: 3,
+        autores: [{ id: 91 }],
+        areas: [1, 1, 2],
+      });
+
+    assert.strictEqual(resposta.status, 201);
+    assert.deepStrictEqual(
+      resposta.body.publicacao.areas.map((area) => area.id).sort((a, b) => a - b),
+      [1, 2],
+    );
+
+    const associacoes = await consultar(
+      'SELECT id_area FROM area_publicacao WHERE id_publicacao = $1 ORDER BY id_area',
+      [resposta.body.publicacao.id],
+    );
+    assert.deepStrictEqual(associacoes.rows.map((linha) => linha.id_area), [1, 2]);
   });
 
   it('retorna 409 para DOI repetido', async () => {
@@ -1359,6 +1451,7 @@ describe('Cadastro do acervo', () => {
       veiculo: 'Revista',
       idProjeto: 3,
       autores: [{ id: 91 }],
+      areas: [1],
     };
 
     const [semToken, comoAluno] = await Promise.all([
@@ -1445,10 +1538,12 @@ describe('CRUD completo, Views, vagas e candidaturas', () => {
         veiculo: 'Revista de Testes do Scientia',
         idProjeto: 4,
         autores: [{ id: 117 }, { id: 91 }],
+        areas: [2],
       });
 
     assert.strictEqual(atualizacao.status, 200);
     assert.strictEqual(atualizacao.body.publicacao.projeto.id, 4);
+    assert.deepStrictEqual(atualizacao.body.publicacao.areas, [{ id: 2, nome: 'Agronomia' }]);
     assert.deepStrictEqual(
       atualizacao.body.publicacao.autores.map((autor) => [autor.id, autor.ordem]),
       [
@@ -1457,17 +1552,57 @@ describe('CRUD completo, Views, vagas e candidaturas', () => {
       ],
     );
 
+    const [porAutorRemovido, porAutorNovo, porAreaAntiga, porAreaNova] = await Promise.all([
+      request(app).get('/api/publicacoes?idPesquisador=104'),
+      request(app).get('/api/publicacoes?idPesquisador=117'),
+      request(app).get('/api/publicacoes?idArea=1'),
+      request(app).get('/api/publicacoes?idArea=2'),
+    ]);
+    assert.ok(!porAutorRemovido.body.publicacoes.some((publicacao) => publicacao.id === 1));
+    assert.ok(porAutorNovo.body.publicacoes.some((publicacao) => publicacao.id === 1));
+    assert.ok(!porAreaAntiga.body.publicacoes.some((publicacao) => publicacao.id === 1));
+    assert.ok(porAreaNova.body.publicacoes.some((publicacao) => publicacao.id === 1));
+
     const exclusao = await request(app)
       .delete('/api/publicacoes/2')
       .set('Authorization', `Bearer ${token}`);
 
     assert.strictEqual(exclusao.status, 204);
 
-    const autorias = await consultar(
-      'SELECT COUNT(*)::int AS total FROM autoria WHERE id_publicacao = $1',
+    const relacionamentos = await consultar(
+      `
+        SELECT
+          (SELECT COUNT(*)::int FROM autoria WHERE id_publicacao = $1) AS autorias,
+          (SELECT COUNT(*)::int FROM area_publicacao WHERE id_publicacao = $1) AS areas
+      `,
       [2],
     );
-    assert.strictEqual(autorias.rows[0].total, 0);
+    assert.deepStrictEqual(relacionamentos.rows[0], { autorias: 0, areas: 0 });
+  });
+
+  it('atualização inválida de área não altera publicação, autoria nem áreas anteriores', async () => {
+    const token = await tokenPesquisadorTeste();
+    const antes = await request(app).get('/api/publicacoes/1');
+
+    const resposta = await request(app)
+      .put('/api/publicacoes/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        titulo: 'Título que não deve persistir',
+        tipo: 'artigo',
+        ano: 2026,
+        doi: '10.1000/exemplo.1',
+        veiculo: 'Revista que não deve persistir',
+        idProjeto: 4,
+        autores: [{ id: 117 }],
+        areas: [999],
+      });
+
+    assert.strictEqual(resposta.status, 400);
+    assert.strictEqual(resposta.body.mensagem, 'Área não encontrada.');
+
+    const depois = await request(app).get('/api/publicacoes/1');
+    assert.deepStrictEqual(depois.body, antes.body);
   });
 
   it('atualiza grupo, exclui grupo sem projetos e protege grupo referenciado', async () => {

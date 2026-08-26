@@ -68,6 +68,7 @@ test('o schema contém exatamente as tabelas relacionais esperadas pelo projeto'
     'membro',
     'participacao',
     'possui_area',
+    'area_publicacao',
     'autoria',
     'candidatura',
   ]);
