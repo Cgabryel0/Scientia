@@ -682,6 +682,34 @@ describe('Acervo público', () => {
     assert.deepStrictEqual(resposta.body.paginacao, { pagina: 1, porPagina: 20, total: 3 });
   });
 
+  it('/api/pesquisadores/:id retorna perfil público sem dados internos', async () => {
+    const resposta = await request(app).get('/api/pesquisadores/91');
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(resposta.body, {
+      id: 91,
+      nome: 'Zuleica Souza',
+      vinculo: 'docente',
+      numeroLattes: '1234567890123456',
+    });
+    assert.strictEqual(Object.hasOwn(resposta.body, 'email'), false);
+    assert.strictEqual(Object.hasOwn(resposta.body, 'idConta'), false);
+  });
+
+  it('/api/pesquisadores/:id retorna 404 para inexistente', async () => {
+    const resposta = await request(app).get('/api/pesquisadores/9999');
+
+    assert.strictEqual(resposta.status, 404);
+    assert.strictEqual(resposta.body.mensagem, 'Pesquisador não encontrado.');
+  });
+
+  it('/api/pesquisadores/:id valida o identificador', async () => {
+    const resposta = await request(app).get('/api/pesquisadores/abc');
+
+    assert.strictEqual(resposta.status, 400);
+    assert.strictEqual(resposta.body.mensagem, 'O id deve ser um número inteiro maior que zero.');
+  });
+
   it('/api/areas lista áreas ordenadas por nome', async () => {
     const resposta = await request(app).get('/api/areas');
 
@@ -996,6 +1024,74 @@ describe('Cadastro do acervo', () => {
     assert.strictEqual(depois.rows[0].total, antes.rows[0].total);
   });
 
+  it('vincula usuários pesquisadores como coautores sem duplicar a produção e permite consultá-la por cada perfil', async () => {
+    const autorPrincipal = await cadastrar(
+      dadosPesquisador({
+        nome: 'Docente Autor Principal',
+        email: 'autor.principal@ufape.edu.br',
+        numeroLattes: '4545454545454545',
+        vinculo: 'docente',
+      }),
+    );
+    const coautor = await cadastrar(
+      dadosPesquisador({
+        nome: 'Discente Coautor',
+        email: 'coautor.discente@ufape.edu.br',
+        numeroLattes: '4646464646464646',
+        vinculo: 'discente',
+      }),
+    );
+
+    assert.strictEqual(autorPrincipal.status, 201);
+    assert.strictEqual(coautor.status, 201);
+
+    const pesquisadores = await consultar(
+      `
+        SELECT id_pesquisador, email
+        FROM pesquisador
+        WHERE email = ANY($1::text[])
+      `,
+      [['autor.principal@ufape.edu.br', 'coautor.discente@ufape.edu.br']],
+    );
+    const idPorEmail = new Map(pesquisadores.rows.map((pesquisador) => [pesquisador.email, pesquisador.id_pesquisador]));
+    const idAutorPrincipal = idPorEmail.get('autor.principal@ufape.edu.br');
+    const idCoautor = idPorEmail.get('coautor.discente@ufape.edu.br');
+
+    const cadastro = await request(app)
+      .post('/api/publicacoes')
+      .set('Authorization', `Bearer ${autorPrincipal.body.token}`)
+      .send({
+        titulo: 'Produção compartilhada entre coautores',
+        tipo: 'artigo',
+        ano: 2026,
+        doi: '10.1000/coautoria-compartilhada',
+        veiculo: 'Revista de Integração Científica',
+        idProjeto: 3,
+        autores: [{ id: idAutorPrincipal }, { id: idCoautor }],
+      });
+
+    assert.strictEqual(cadastro.status, 201);
+    assert.deepStrictEqual(
+      cadastro.body.publicacao.autores.map((autor) => [autor.id, autor.ordem]),
+      [[idAutorPrincipal, 1], [idCoautor, 2]],
+    );
+
+    const [porAutorPrincipal, porCoautor] = await Promise.all([
+      request(app).get(`/api/publicacoes?idPesquisador=${idAutorPrincipal}`),
+      request(app).get(`/api/publicacoes?idPesquisador=${idCoautor}`),
+    ]);
+
+    const idPublicacao = cadastro.body.publicacao.id;
+    assert.ok(porAutorPrincipal.body.publicacoes.some((publicacao) => publicacao.id === idPublicacao));
+    assert.ok(porCoautor.body.publicacoes.some((publicacao) => publicacao.id === idPublicacao));
+
+    const quantidade = await consultar(
+      'SELECT COUNT(*)::int AS total FROM publicacao WHERE doi = $1',
+      ['10.1000/coautoria-compartilhada'],
+    );
+    assert.strictEqual(quantidade.rows[0].total, 1);
+  });
+
   it('retorna 409 para DOI repetido', async () => {
     const token = await tokenPesquisadorTeste();
 
@@ -1251,6 +1347,30 @@ describe('Cadastro do acervo', () => {
       assert.strictEqual(resposta.status, 401);
       assert.strictEqual(resposta.body.mensagem, 'Envie o token de acesso no cabeçalho Authorization.');
     }
+  });
+
+  it('edição de publicação exige autenticação e perfil autorizado', async () => {
+    const tokenAluno = await tokenAlunoTeste();
+    const corpo = {
+      titulo: 'Publicação protegida',
+      tipo: 'artigo',
+      ano: 2024,
+      doi: null,
+      veiculo: 'Revista',
+      idProjeto: 3,
+      autores: [{ id: 91 }],
+    };
+
+    const [semToken, comoAluno] = await Promise.all([
+      request(app).put('/api/publicacoes/1').send(corpo),
+      request(app)
+        .put('/api/publicacoes/1')
+        .set('Authorization', `Bearer ${tokenAluno}`)
+        .send(corpo),
+    ]);
+
+    assert.strictEqual(semToken.status, 401);
+    assert.strictEqual(comoAluno.status, 403);
   });
 
   it('retorna 403 para pesquisador autenticado sem linha em pesquisador', async () => {

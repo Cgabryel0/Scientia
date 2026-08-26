@@ -1,4 +1,4 @@
-import { listaDePesquisadoresResposta } from '../dto/pesquisadorDTO.js';
+import { listaDePesquisadoresResposta, pesquisadorDetalheResposta } from '../dto/pesquisadorDTO.js';
 import * as pesquisadorConsultaService from '../services/pesquisadorConsultaService.js';
 
 export async function listar(req, res) {
@@ -8,4 +8,9 @@ export async function listar(req, res) {
     pesquisadores: listaDePesquisadoresResposta(resultado.pesquisadores),
     paginacao: resultado.paginacao,
   });
+}
+
+export async function detalhar(req, res) {
+  const pesquisador = await pesquisadorConsultaService.buscarPorId(req.params.id);
+  res.json(pesquisadorDetalheResposta(pesquisador));
 }

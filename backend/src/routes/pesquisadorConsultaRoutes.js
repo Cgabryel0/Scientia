@@ -5,5 +5,6 @@ import * as pesquisadorConsultaController from '../controllers/pesquisadorConsul
 const rotas = Router();
 
 rotas.get('/', pesquisadorConsultaController.listar);
+rotas.get('/:id', pesquisadorConsultaController.detalhar);
 
 export default rotas;
