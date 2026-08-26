@@ -23,7 +23,10 @@
       "text",
       "lcov"
     ],
-    "reports-dir": "coverage"
+    "reports-dir": "coverage",
+    "check-coverage": true,
+    "statements": 70,
+    "branches": 80
   },
   "license": "MIT",
   "dependencies": {
