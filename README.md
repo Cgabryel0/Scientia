@@ -50,6 +50,7 @@ ordem alfabética:
    candidaturas. Parte dos dados é gerada com `generate_series` para formar um volume
    maior e consistente de registros relacionados.
 3. `database/init/03-views.sql`: criação das três Views da entrega.
+4. `database/init/04-triggers.sql`: criação dos gatilhos (triggers) da entrega.
 
 ### Views da entrega
 
@@ -63,6 +64,42 @@ A tela **Relatórios** (`/relatorios`) consome os endpoints
 `/api/relatorios/projetos`, `/api/relatorios/publicacoes` e
 `/api/relatorios/grupos`. O backend consulta diretamente as Views em vez de repetir os
 JOINs e agregações.
+
+### Gatilhos (Triggers) da entrega
+
+O arquivo `database/init/04-triggers.sql` implementa dois recursos automatizados:
+
+**1. Auditoria de publicações (`trg_auditar_publicacao`)** — toda inserção, alteração ou
+exclusão na tabela `publicacao` é registrada automaticamente em `auditoria_publicacao`,
+com a operação, os dados antigos e novos (JSONB) e a data da ocorrência.
+
+**2. Gestão automática de vagas (`trg_bloquear_candidatura_vaga_fechada` e
+`trg_fechar_vaga_preenchida`)** — o banco impede a criação de candidatura para vaga
+`fechada` (regra que a API já validava, agora garantida também na camada de dados) e
+fecha a vaga automaticamente quando as candidaturas aprovadas atingem `qtd_vagas` —
+efeito visível na interface ao aprovar a última candidatura de uma vaga.
+
+Como testar (com os containers rodando, `docker compose exec db psql -U scientia -d scientia`):
+
+```sql
+-- Auditoria: alterar uma publicação e consultar o histórico
+UPDATE publicacao SET titulo = titulo || ' (revisado)' WHERE id_publicacao = 1;
+SELECT operacao, dados_antigos->>'titulo' AS titulo_antigo,
+       dados_novos->>'titulo' AS titulo_novo, data_ocorrencia
+FROM auditoria_publicacao ORDER BY id_auditoria DESC;
+
+-- Bloqueio: candidatura em vaga fechada deve falhar
+UPDATE vaga SET status = 'fechada' WHERE id_vaga = 1;
+INSERT INTO candidatura (id_aluno, id_vaga, status, data_candidatura)
+VALUES (1, 1, 'pendente', CURRENT_DATE);
+-- ERRO: A vaga 1 está fechada e não aceita novas candidaturas.
+
+-- Fechamento automático: aprovar candidatura até preencher a vaga
+UPDATE vaga SET status = 'aberta', qtd_vagas = 1 WHERE id_vaga = 2;
+UPDATE candidatura SET status = 'aprovada'
+WHERE id_vaga = 2 AND id_aluno = (SELECT MIN(id_aluno) FROM candidatura WHERE id_vaga = 2);
+SELECT status FROM vaga WHERE id_vaga = 2; -- 'fechada'
+```
 
 ### CRUDs implementados para a entrega
 
