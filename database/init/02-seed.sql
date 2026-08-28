@@ -59,30 +59,30 @@ INSERT INTO curso (id_curso, nome_curso) VALUES
     (18, 'Mestrado em Educação Contemporânea');
 
 INSERT INTO area_conhecimento (id_area, nome_area) VALUES
-    (1,  'Ciências Agrárias'),
-    (2,  'Agronomia'),
-    (3,  'Zootecnia'),
-    (4,  'Medicina Veterinária'),
-    (5,  'Ciência e Tecnologia de Alimentos'),
-    (6,  'Recursos Florestais e Engenharia Florestal'),
-    (7,  'Engenharia Agrícola'),
-    (8,  'Ciências Exatas e da Terra'),
-    (9,  'Ciência da Computação'),
-    (10, 'Matemática'),
-    (11, 'Física'),
-    (12, 'Química'),
-    (13, 'Geociências'),
-    (14, 'Ciências Biológicas'),
-    (15, 'Ecologia'),
-    (16, 'Genética'),
-    (17, 'Microbiologia'),
-    (18, 'Ciências da Saúde'),
-    (19, 'Saúde Coletiva'),
-    (20, 'Nutrição'),
-    (21, 'Ciências Humanas'),
-    (22, 'Educação'),
-    (23, 'Ciências Sociais Aplicadas'),
-    (24, 'Economia');
+    (1,  'Inteligência Artificial'),
+    (2,  'Aprendizado de Máquina'),
+    (3,  'Engenharia de Software'),
+    (4,  'Banco de Dados'),
+    (5,  'Redes de Computadores'),
+    (6,  'Segurança da Informação'),
+    (7,  'Computação Gráfica'),
+    (8,  'Visão Computacional'),
+    (9,  'Processamento de Linguagem Natural'),
+    (10, 'Sistemas Distribuídos'),
+    (11, 'Computação em Nuvem'),
+    (12, 'Internet das Coisas'),
+    (13, 'Sistemas Embarcados'),
+    (14, 'Interação Humano-Computador'),
+    (15, 'Informática na Educação'),
+    (16, 'Ciência de Dados'),
+    (17, 'Algoritmos e Otimização'),
+    (18, 'Teoria da Computação'),
+    (19, 'Arquitetura de Computadores'),
+    (20, 'Robótica'),
+    (21, 'Bioinformática'),
+    (22, 'Jogos Digitais'),
+    (23, 'Computação de Alto Desempenho'),
+    (24, 'Métodos Formais');
 
 INSERT INTO conta (id_conta, email, senha_hash, tipo, data_criacao)
 SELECT
@@ -107,7 +107,7 @@ INSERT INTO aluno (id_aluno, id_conta, id_curso, nome, matricula)
 SELECT
     p.seq,
     p.seq,
-    1 + (p.seq * 5) % 18,
+    CASE WHEN p.seq % 10 < 7 THEN 1 ELSE 2 + (p.seq * 5) % 17 END,
     p.nome,
     (2021 + (p.seq % 5))::text || lpad(p.seq::text, 6, '0')
 FROM carga_pessoa p
@@ -158,26 +158,26 @@ SELECT
         'Laboratório de Pesquisa em '
     ])[1 + i % 3]
     || (ARRAY[
-        'Sistemas Agroflorestais',
-        'Recursos Hídricos do Semiárido',
         'Inteligência Artificial Aplicada',
-        'Produção Animal Sustentável',
-        'Segurança Alimentar e Nutricional',
-        'Manejo e Conservação do Solo',
-        'Educação do Campo',
-        'Cadeia Produtiva do Leite',
-        'Biodiversidade da Caatinga',
-        'Fitopatologia Tropical',
         'Engenharia de Software',
-        'Economia Rural e Agronegócio',
-        'Tecnologia de Alimentos',
-        'Genética e Melhoramento Vegetal',
-        'Sanidade Animal',
-        'Agricultura de Precisão',
-        'Energias Renováveis',
-        'Saúde Coletiva no Agreste',
         'Ciência de Dados',
-        'Políticas Públicas e Desenvolvimento Regional'
+        'Redes e Sistemas Distribuídos',
+        'Segurança Cibernética',
+        'Visão Computacional',
+        'Processamento de Linguagem Natural',
+        'Jogos e Entretenimento Digital',
+        'Informática na Educação',
+        'Computação de Alto Desempenho',
+        'Sistemas Embarcados e Internet das Coisas',
+        'Interação Humano-Computador',
+        'Banco de Dados e Recuperação de Informação',
+        'Métodos Formais e Verificação',
+        'Robótica Inteligente',
+        'Tecnologia da Informação para o Semiárido',
+        'Bioinformática',
+        'Algoritmos e Otimização',
+        'Computação em Nuvem',
+        'Teoria da Computação'
     ])[1 + i % 20],
     'http://dgp.cnpq.br/dgp/espelhogrupo/' || (1000000 + i * 37),
     2005 + i % 20
@@ -191,23 +191,23 @@ SELECT
     ac.v || ' ' || tm.v || ' ' || ct.v,
     'Este projeto investiga aspectos de ' || tm.v || ' ' || ct.v || ', com foco em '
         || (ARRAY[
-            'indicadores de produtividade',
-            'sustentabilidade ambiental',
-            'viabilidade econômica',
-            'transferência de tecnologia',
-            'formação de recursos humanos',
-            'qualidade do produto final',
-            'impacto social'
+            'desempenho e escalabilidade',
+            'qualidade de software',
+            'acessibilidade e usabilidade',
+            'reprodutibilidade dos experimentos',
+            'impacto social da tecnologia',
+            'formação de recursos humanos em computação',
+            'transferência de tecnologia'
         ])[1 + (i * 5) % 7]
         || '. A metodologia prevê '
         || (ARRAY[
-            'coleta de dados em campo e análise estatística',
-            'experimentos em delineamento inteiramente casualizado',
-            'levantamento documental e entrevistas semiestruturadas',
+            'experimentos controlados e análise estatística',
+            'desenvolvimento iterativo com validação por usuários',
+            'revisão sistemática da literatura',
             'modelagem computacional e simulação',
-            'ensaios laboratoriais e validação em campo',
-            'análise de séries históricas',
-            'pesquisa-ação com participação da comunidade'
+            'treinamento e avaliação de modelos com dados reais',
+            'estudo de caso em ambiente de produção',
+            'prototipação e testes de campo'
         ])[1 + (i * 3) % 7] || '.',
     DATE '2018-02-01' + ((i * 23) % 2500),
     CASE
@@ -231,27 +231,27 @@ CROSS JOIN LATERAL (
 ) AS ac(v)
 CROSS JOIN LATERAL (
     SELECT (ARRAY[
-        'sistemas agroflorestais',
-        'qualidade da água',
-        'cultivares de milho',
-        'sanidade de rebanhos leiteiros',
-        'técnicas de aprendizado de máquina',
-        'segurança alimentar',
-        'manejo conservacionista do solo',
-        'práticas de educação do campo',
-        'cadeia produtiva do leite',
-        'uso de recursos hídricos',
-        'biodiversidade da Caatinga',
-        'desempenho zootécnico de suínos',
-        'políticas públicas de fomento',
+        'sistemas de recomendação',
         'redes neurais profundas',
-        'tecnologias de agricultura de precisão',
-        'doenças fúngicas em hortaliças',
-        'nutrição de ruminantes',
-        'fontes renováveis de energia',
-        'indicadores de saúde coletiva',
-        'processos de secagem de frutas',
-        'produtividade da palma forrageira'
+        'técnicas de aprendizado de máquina',
+        'arquiteturas de microsserviços',
+        'práticas de desenvolvimento ágil',
+        'bancos de dados NoSQL',
+        'segurança em aplicações web',
+        'redes definidas por software',
+        'visão computacional',
+        'modelos de linguagem natural',
+        'sistemas embarcados de baixo custo',
+        'interfaces acessíveis',
+        'objetos de aprendizagem digitais',
+        'pipelines de ciência de dados',
+        'algoritmos de otimização',
+        'computação em nuvem',
+        'dispositivos de Internet das Coisas',
+        'testes automatizados de software',
+        'jogos educacionais digitais',
+        'mineração de dados educacionais',
+        'visualização de dados científicos'
     ])[1 + i % 21]
 ) AS tm(v)
 CROSS JOIN LATERAL (
@@ -259,16 +259,16 @@ CROSS JOIN LATERAL (
         'no Agreste Pernambucano',
         'em Garanhuns',
         'no semiárido nordestino',
-        'no Agreste Meridional',
-        'em propriedades de agricultura familiar',
-        'em escolas do campo',
-        'no bioma Caatinga',
-        'em comunidades rurais de Pernambuco',
-        'na bacia do rio Mundaú',
-        'em assentamentos rurais',
-        'no polo leiteiro de Pernambuco',
-        'em unidades experimentais da UFAPE',
-        'em municípios do Agreste'
+        'em escolas públicas do Agreste',
+        'no laboratório de computação da UFAPE',
+        'em aplicações móveis',
+        'em ambientes de nuvem',
+        'na agricultura de precisão',
+        'em sistemas de saúde digital',
+        'no monitoramento ambiental da Caatinga',
+        'em plataformas de ensino a distância',
+        'em comunidades do interior de Pernambuco',
+        'em sistemas legados de instituições públicas'
     ])[1 + i % 13]
 ) AS ct(v);
 
@@ -280,21 +280,21 @@ SELECT
     2018 + i % 9,
     '10.' || (5000 + i % 40) || '/scientia.' || (2018 + i % 9) || '.' || i,
     (ARRAY[
-        'Revista Brasileira de Ciências Agrárias',
-        'Revista Caatinga',
-        'Pesquisa Agropecuária Brasileira',
-        'Ciência Rural',
-        'Semina: Ciências Agrárias',
-        'Acta Scientiarum. Agronomy',
-        'Revista Ciência Agronômica',
-        'Revista Brasileira de Zootecnia',
-        'Food Science and Technology',
         'Anais do Simpósio Brasileiro de Banco de Dados',
         'Anais do Congresso Brasileiro de Software',
-        'Revista de Economia e Sociologia Rural',
-        'Revista Brasileira de Educação do Campo',
-        'Anais do Congresso Brasileiro de Agronomia',
-        'Journal of Agricultural Science'
+        'Anais do Simpósio Brasileiro de Engenharia de Software',
+        'Anais do Simpósio Brasileiro de Redes de Computadores',
+        'Anais do Simpósio Brasileiro de Informática na Educação',
+        'Anais do Encontro Nacional de Inteligência Artificial e Computacional',
+        'Anais do Simpósio Brasileiro de Sistemas de Informação',
+        'Journal of the Brazilian Computer Society',
+        'Journal of Systems and Software',
+        'IEEE Access',
+        'Expert Systems with Applications',
+        'Information and Software Technology',
+        'Revista Brasileira de Informática na Educação',
+        'Computers & Education',
+        'Software: Practice and Experience'
     ])[1 + (i * 7) % 15],
     (ARRAY[
         'Efeitos de', 'Um estudo sobre', 'Impactos de', 'Análise comparativa de',
@@ -303,37 +303,37 @@ SELECT
     ])[1 + (i * 2) % 9]
     || ' '
     || (ARRAY[
-        'sistemas agroflorestais',
-        'qualidade da água',
-        'cultivares de milho',
-        'sanidade de rebanhos leiteiros',
-        'técnicas de aprendizado de máquina',
-        'segurança alimentar',
-        'manejo conservacionista do solo',
-        'práticas de educação do campo',
-        'cadeia produtiva do leite',
-        'uso de recursos hídricos',
-        'biodiversidade da Caatinga',
-        'desempenho zootécnico de suínos',
-        'políticas públicas de fomento',
+        'sistemas de recomendação',
         'redes neurais profundas',
-        'tecnologias de agricultura de precisão',
-        'doenças fúngicas em hortaliças',
-        'nutrição de ruminantes',
-        'fontes renováveis de energia',
-        'indicadores de saúde coletiva',
-        'processos de secagem de frutas',
-        'produtividade da palma forrageira'
+        'técnicas de aprendizado de máquina',
+        'arquiteturas de microsserviços',
+        'práticas de desenvolvimento ágil',
+        'bancos de dados NoSQL',
+        'segurança em aplicações web',
+        'redes definidas por software',
+        'visão computacional',
+        'modelos de linguagem natural',
+        'sistemas embarcados de baixo custo',
+        'interfaces acessíveis',
+        'objetos de aprendizagem digitais',
+        'pipelines de ciência de dados',
+        'algoritmos de otimização',
+        'computação em nuvem',
+        'dispositivos de Internet das Coisas',
+        'testes automatizados de software',
+        'jogos educacionais digitais',
+        'mineração de dados educacionais',
+        'visualização de dados científicos'
     ])[1 + (i * 5) % 21]
     || ' '
     || (ARRAY[
-        'em condições de sequeiro',
-        'no contexto da agricultura familiar',
-        'sob manejo integrado',
+        'em um estudo de caso real',
+        'com dados abertos governamentais',
+        'em ambiente de produção',
         'em escala experimental',
-        'no Agreste Pernambucano',
-        'com dados de campo',
-        'em ambiente controlado'
+        'no contexto de instituições públicas de ensino',
+        'com avaliação por usuários',
+        'em dispositivos de baixo custo'
     ])[1 + (i * 4) % 7]
 FROM generate_series(1, 200) AS s(i);
 
@@ -349,9 +349,9 @@ SELECT
     (ARRAY[
         'Estar regularmente matriculado em curso de graduação da UFAPE.',
         'Disponibilidade de 20 horas semanais e coeficiente de rendimento acima de 7,0.',
-        'Conhecimento básico em estatística e uso de planilhas eletrônicas.',
-        'Experiência prévia com trabalho de campo será considerada diferencial.',
-        'Noções de programação e análise de dados.',
+        'Conhecimento básico em Python e estruturas de dados.',
+        'Noções de Git, bancos de dados e desenvolvimento web.',
+        'Interesse em aprendizado de máquina e análise de dados.',
         'Não possuir vínculo empregatício e manter currículo Lattes atualizado.'
     ])[1 + (i * 5) % 6],
     CASE WHEN i % 3 = 0 THEN 'fechada' ELSE 'aberta' END,
