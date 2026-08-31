@@ -11,6 +11,7 @@ import { DetalheProjeto } from './paginas/DetalheProjeto.jsx';
 import { EditarProjeto } from './paginas/EditarProjeto.jsx';
 import { EditarPublicacao } from './paginas/EditarPublicacao.jsx';
 import { Grupos } from './paginas/Grupos.jsx';
+import { IndicadoresProducoes } from './paginas/IndicadoresProducoes.jsx';
 import { FormularioGrupo } from './paginas/FormularioGrupo.jsx';
 import { FormularioVaga } from './paginas/FormularioVaga.jsx';
 import { Login } from './paginas/Login.jsx';
@@ -47,6 +48,7 @@ export function App() {
           <Route path="/painel" element={<Painel />} />
           <Route path="/sem-permissao" element={<SemPermissao />} />
           <Route path="/candidaturas" element={<Candidaturas />} />
+          <Route path="/indicadores" element={<IndicadoresProducoes />} />
 
           <Route element={<RotaProtegida tipos={['pesquisador', 'admin']} />}>
             <Route path="/publicacoes/cadastro" element={<CadastroPublicacao />} />
