@@ -8,6 +8,7 @@ import * as editalService from '../servicos/editalService.js';
 import * as grupoService from '../servicos/grupoService.js';
 import * as pesquisadorService from '../servicos/pesquisadorService.js';
 import * as projetoService from '../servicos/projetoService.js';
+import * as relatorioService from '../servicos/relatorioService.js';
 import {
   RESPOSTA_AREAS,
   RESPOSTA_EDITAIS,
@@ -21,8 +22,9 @@ vi.mock('../servicos/editalService.js', () => ({ listar: vi.fn() }));
 vi.mock('../servicos/grupoService.js', () => ({ listar: vi.fn() }));
 vi.mock('../servicos/pesquisadorService.js', () => ({ listar: vi.fn() }));
 vi.mock('../servicos/projetoService.js', () => ({ listar: vi.fn() }));
+vi.mock('../servicos/relatorioService.js', () => ({ obterIndicadoresProducoes: vi.fn() }));
 
-const sessaoFalsa = { usuario: null, carregando: false };
+const sessaoFalsa = { usuario: null, token: null, carregando: false, entrar: vi.fn() };
 
 vi.mock('../contexto/AuthContext.jsx', () => ({
   useAuth: () => sessaoFalsa,
@@ -59,10 +61,20 @@ describe('Guarda das rotas de cadastro no App', () => {
     grupoService.listar.mockResolvedValue(RESPOSTA_GRUPOS);
     pesquisadorService.listar.mockResolvedValue(RESPOSTA_PESQUISADORES);
     projetoService.listar.mockResolvedValue(RESPOSTA_PROJETOS);
+    relatorioService.obterIndicadoresProducoes.mockResolvedValue({
+      indicadores: {
+        totalProducoes: 0,
+        porAno: [],
+        porTipo: [],
+        porArea: [],
+        areasDestaque: [],
+      },
+    });
   });
 
   afterEach(() => {
     sessaoFalsa.usuario = null;
+    sessaoFalsa.token = null;
     vi.clearAllMocks();
   });
 
@@ -89,5 +101,28 @@ describe('Guarda das rotas de cadastro no App', () => {
     await act(async () => {});
 
     expect(screen.getByRole('heading', { name: titulo })).toBeInTheDocument();
+  });
+
+  it('rota de indicadores redireciona visitante sem sessão para o login', async () => {
+    renderizarApp('/indicadores');
+    await act(async () => {});
+
+    expect(screen.getByRole('heading', { name: 'Entrar no Scientia' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Indicadores de produções científicas' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('rota de indicadores fica disponível para usuário autenticado', async () => {
+    sessaoFalsa.usuario = ALUNO;
+    sessaoFalsa.token = 'token-aluno';
+
+    renderizarApp('/indicadores');
+    await act(async () => {});
+
+    expect(
+      screen.getByRole('heading', { name: 'Indicadores de produções científicas' }),
+    ).toBeInTheDocument();
+    expect(relatorioService.obterIndicadoresProducoes).toHaveBeenCalledWith('token-aluno');
   });
 });

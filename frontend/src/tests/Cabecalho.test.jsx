@@ -35,6 +35,7 @@ describe('Cabeçalho do hub', () => {
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/login');
     expect(screen.queryByRole('button', { name: /sair/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Painel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Indicadores' })).not.toBeInTheDocument();
   });
 
   it('com sessão de admin, mostra o menu da conta e o link de usuários', () => {
@@ -45,6 +46,7 @@ describe('Cabeçalho do hub', () => {
     expect(screen.getByText('Ana Souza')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sair/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Painel' })).toHaveAttribute('href', '/painel');
+    expect(screen.getByRole('link', { name: 'Indicadores' })).toHaveAttribute('href', '/indicadores');
     expect(screen.getByRole('link', { name: 'Usuários' })).toHaveAttribute('href', '/usuarios');
     expect(screen.queryByRole('link', { name: 'Entrar' })).not.toBeInTheDocument();
   });

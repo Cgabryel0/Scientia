@@ -815,6 +815,89 @@ describe('Acervo público', () => {
 
 });
 
+
+describe('Indicadores de produções científicas', () => {
+  beforeEach(reiniciarCenarioAcervoTeste);
+
+  it('exige autenticação para consultar os indicadores', async () => {
+    const resposta = await request(app).get('/api/relatorios/indicadores-producoes');
+
+    assert.strictEqual(resposta.status, 401);
+    assert.strictEqual(
+      resposta.body.mensagem,
+      'Envie o token de acesso no cabeçalho Authorization.',
+    );
+  });
+
+  it('consolida produções por ano, tipo e área sem inflar contagens por autoria', async () => {
+    const token = await tokenAlunoTeste();
+    const resposta = await request(app)
+      .get('/api/relatorios/indicadores-producoes')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(resposta.body.indicadores, {
+      totalProducoes: 3,
+      porAno: [
+        { ano: 2023, quantidade: 1 },
+        { ano: 2024, quantidade: 1 },
+        { ano: 2025, quantidade: 1 },
+      ],
+      porTipo: [
+        { tipo: 'artigo', quantidade: 1 },
+        { tipo: 'capitulo', quantidade: 1 },
+        { tipo: 'resumo', quantidade: 1 },
+      ],
+      porArea: [
+        { idArea: 1, nome: 'Ciência da Computação', quantidade: 2 },
+        { idArea: 2, nome: 'Agronomia', quantidade: 1 },
+      ],
+      areasDestaque: [{ idArea: 1, nome: 'Ciência da Computação', quantidade: 2 }],
+    });
+  });
+
+  it('mantém o total global ao vincular uma mesma produção a mais de uma área', async () => {
+    await consultar(
+      'INSERT INTO area_publicacao (id_publicacao, id_area) VALUES ($1, $2)',
+      [1, 2],
+    );
+    const token = await tokenPesquisadorTeste();
+
+    const resposta = await request(app)
+      .get('/api/relatorios/indicadores-producoes')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.strictEqual(resposta.status, 200);
+    assert.strictEqual(resposta.body.indicadores.totalProducoes, 3);
+    assert.deepStrictEqual(resposta.body.indicadores.porArea, [
+      { idArea: 2, nome: 'Agronomia', quantidade: 2 },
+      { idArea: 1, nome: 'Ciência da Computação', quantidade: 2 },
+    ]);
+    assert.deepStrictEqual(
+      resposta.body.indicadores.areasDestaque.map((area) => area.nome),
+      ['Agronomia', 'Ciência da Computação'],
+    );
+  });
+
+  it('retorna estrutura vazia e estável quando ainda não existem produções', async () => {
+    await reiniciarCenarioTeste();
+    const token = await tokenAdmin();
+
+    const resposta = await request(app)
+      .get('/api/relatorios/indicadores-producoes')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.strictEqual(resposta.status, 200);
+    assert.deepStrictEqual(resposta.body.indicadores, {
+      totalProducoes: 0,
+      porAno: [],
+      porTipo: [],
+      porArea: [],
+      areasDestaque: [],
+    });
+  });
+});
+
 describe('Cadastro do acervo', () => {
   beforeEach(reiniciarCenarioAcervoTeste);
 
