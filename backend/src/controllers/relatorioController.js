@@ -11,3 +11,7 @@ export async function publicacoes(req, res) {
 export async function grupos(req, res) {
   res.json({ grupos: await relatorioService.listarGrupos() });
 }
+
+export async function indicadoresProducoes(req, res) {
+  res.json({ indicadores: await relatorioService.obterIndicadoresProducoes() });
+}

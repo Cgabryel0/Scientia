@@ -6,6 +6,7 @@ const ROTAS_PUBLICAS = [
   { metodo: 'GET', caminho: '/api/grupos' },
   { metodo: 'GET', caminho: '/api/grupos/:id' },
   { metodo: 'GET', caminho: '/api/pesquisadores' },
+  { metodo: 'GET', caminho: '/api/pesquisadores/:id' },
   { metodo: 'GET', caminho: '/api/projetos' },
   { metodo: 'GET', caminho: '/api/projetos/:id' },
   { metodo: 'GET', caminho: '/api/publicacoes' },

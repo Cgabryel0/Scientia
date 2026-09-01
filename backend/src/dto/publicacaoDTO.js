@@ -8,6 +8,7 @@ export function publicacaoResposta(publicacao) {
     veiculo: publicacao.veiculo,
     projeto: publicacao.projeto,
     autores: publicacao.autores,
+    areas: publicacao.areas,
   };
 }
 

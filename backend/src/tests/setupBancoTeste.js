@@ -98,6 +98,7 @@ export async function reiniciarBancoTeste() {
       TRUNCATE
         candidatura,
         autoria,
+        area_publicacao,
         possui_area,
         participacao,
         membro,
@@ -238,6 +239,17 @@ export async function popularCenarioAcervoTeste() {
           ($16, $17, $18)
       `,
       [91, 1, 1, 104, 1, 2, 104, 2, 1, 117, 2, 2, 91, 2, 3, 117, 3, 1],
+    );
+
+    await pool.query(
+      `
+        INSERT INTO area_publicacao (id_publicacao, id_area)
+        VALUES
+          ($1, $2),
+          ($3, $4),
+          ($5, $6)
+      `,
+      [1, 1, 2, 2, 3, 1],
     );
 
     await pool.query("SELECT setval(pg_get_serial_sequence('edital', 'id_edital'), (SELECT MAX(id_edital) FROM edital))");

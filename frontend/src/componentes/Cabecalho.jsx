@@ -27,6 +27,7 @@ export function Cabecalho() {
         <NavLink to="/grupos">Grupos</NavLink>
         <NavLink to="/vagas">Vagas</NavLink>
         <NavLink to="/relatorios">Relatórios</NavLink>
+        {usuario && <NavLink to="/indicadores">Indicadores</NavLink>}
         {usuario && <NavLink to="/painel">Painel</NavLink>}
         {usuario && <NavLink to="/candidaturas">Candidaturas</NavLink>}
         {/* O link só aparece para o admin, mas quem barra o acesso de verdade

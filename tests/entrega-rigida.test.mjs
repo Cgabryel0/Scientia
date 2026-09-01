@@ -48,9 +48,9 @@ test('os artefatos documentais obrigatórios continuam presentes', () => {
   ]) assert.ok(existe(caminho), caminho);
 });
 
-test('o diretório de init possui schema, seed e Views na ordem esperada', () => {
+test('o diretório de init possui schema, seed, Views e Triggers na ordem esperada', () => {
   const arquivos = readdirSync(join(raiz, 'database/init')).sort();
-  assert.deepStrictEqual(arquivos, ['01-schema.sql', '02-seed.sql', '03-views.sql']);
+  assert.deepStrictEqual(arquivos, ['01-schema.sql', '02-seed.sql', '03-views.sql', '04-triggers.sql']);
 });
 
 test('o schema contém exatamente as tabelas relacionais esperadas pelo projeto', () => {
@@ -68,6 +68,7 @@ test('o schema contém exatamente as tabelas relacionais esperadas pelo projeto'
     'membro',
     'participacao',
     'possui_area',
+    'area_publicacao',
     'autoria',
     'candidatura',
   ]);
