@@ -33,12 +33,16 @@ export async function listar(filtros) {
     'O id do pesquisador deve ser um número inteiro.',
     { minimo: 1 },
   );
+  const idArea = validarInteiroOpcional(filtros.idArea, 'O id da área deve ser um número inteiro.', {
+    minimo: 1,
+  });
   const resultado = await repositorioPublicacoes.listar({
     busca: filtros.busca,
     tipo,
     ano,
     idProjeto,
     idPesquisador,
+    idArea,
     limite: paginacao.limite,
     deslocamento: paginacao.deslocamento,
   });
@@ -51,6 +55,20 @@ export async function listar(filtros) {
       total: resultado.total,
     },
   };
+}
+
+export async function listarRelacionadas(valorId, valorLimite) {
+  const id = validarId(valorId);
+  const limite = validarInteiroOpcional(valorLimite, 'O limite deve ser um número inteiro.', { minimo: 1, maximo: 10 }) ?? 5;
+
+  const publicacao = await repositorioPublicacoes.buscarPorId(id);
+  if (!publicacao) {
+    throw new ErroHttp(404, 'Publicação não encontrada.');
+  }
+
+  const relacionadas = await repositorioPublicacoes.buscarRelacionadas(id, limite);
+
+  return relacionadas;
 }
 
 export async function buscarPorId(valorId) {
@@ -78,6 +96,7 @@ export async function cadastrar(dados, usuario) {
         throw new ErroHttp(400, 'Projeto não encontrado.');
       }
 
+      const idsArea = await resolverAreas(publicacao.areas, cliente);
       const autores = await resolverAutores(publicacao.autores, cliente);
       const idCriado = await repositorioPublicacoes.criar(cliente, publicacao);
 
@@ -86,6 +105,13 @@ export async function cadastrar(dados, usuario) {
           idPublicacao: idCriado,
           idPesquisador: autor.id,
           ordem: indice + 1,
+        });
+      }
+
+      for (const idArea of idsArea) {
+        await repositorioPublicacoes.vincularArea(cliente, {
+          idPublicacao: idCriado,
+          idArea,
         });
       }
 
@@ -118,15 +144,24 @@ export async function atualizar(valorId, dados, usuario) {
         throw new ErroHttp(400, 'Projeto não encontrado.');
       }
 
+      const idsArea = await resolverAreas(publicacao.areas, cliente);
       const autores = await resolverAutores(publicacao.autores, cliente);
       await repositorioPublicacoes.atualizar(cliente, id, publicacao);
       await repositorioPublicacoes.removerAutorias(cliente, id);
+      await repositorioPublicacoes.removerAreas(cliente, id);
 
       for (const [indice, autor] of autores.entries()) {
         await repositorioPublicacoes.criarAutoria(cliente, {
           idPublicacao: id,
           idPesquisador: autor.id,
           ordem: indice + 1,
+        });
+      }
+
+      for (const idArea of idsArea) {
+        await repositorioPublicacoes.vincularArea(cliente, {
+          idPublicacao: id,
+          idArea,
         });
       }
     });
@@ -151,6 +186,21 @@ export async function excluir(valorId, usuario) {
 
     await repositorioPublicacoes.excluir(cliente, id);
   });
+}
+
+async function resolverAreas(areas, cliente) {
+  const idsArea = [...new Set(areas)];
+
+  if (idsArea.length === 0) {
+    return idsArea;
+  }
+
+  const existentes = await repositorioPublicacoes.areasExistentes(idsArea, cliente);
+  if (existentes.length !== idsArea.length) {
+    throw new ErroHttp(400, 'Área não encontrada.');
+  }
+
+  return idsArea;
 }
 
 async function resolverAutores(autores, cliente) {
@@ -209,7 +259,8 @@ function validarTiposDaPublicacao(dados) {
     !numeroValidoQuandoPresente(dados.ano) ||
     !numeroValidoQuandoPresente(dados.idProjeto) ||
     (Array.isArray(dados.autores) &&
-      dados.autores.some((autor) => autor?.id != null && !numeroValidoQuandoPresente(autor.id)));
+      dados.autores.some((autor) => autor?.id != null && !numeroValidoQuandoPresente(autor.id))) ||
+    (Array.isArray(dados.areas) && dados.areas.some((idArea) => !numeroValidoQuandoPresente(idArea)));
   const autoresInvalidos =
     dados.autores != null &&
     (!Array.isArray(dados.autores) ||
@@ -222,8 +273,9 @@ function validarTiposDaPublicacao(dados) {
         (campo) => autor[campo] != null && typeof autor[campo] !== 'string',
       ),
     );
+  const areasInvalidas = dados.areas != null && !Array.isArray(dados.areas);
 
-  if (textoInvalido || numeroInvalido || autoresInvalidos || textoAutorInvalido) {
+  if (textoInvalido || numeroInvalido || autoresInvalidos || textoAutorInvalido || areasInvalidas) {
     throw new ErroHttp(400, 'Campos da publicação inválidos.');
   }
 }
@@ -237,6 +289,7 @@ function normalizarPublicacao(dados) {
     veiculo: String(dados.veiculo ?? '').trim(),
     idProjeto: dados.idProjeto,
     autores: Array.isArray(dados.autores) ? dados.autores.map(normalizarAutor) : dados.autores,
+    areas: Array.isArray(dados.areas) ? dados.areas : [],
   };
 }
 
@@ -279,6 +332,10 @@ function validarDadosDaPublicacao(publicacao) {
 
   if (!Number.isInteger(publicacao.idProjeto) || publicacao.idProjeto < 1 || publicacao.idProjeto > POSTGRES_INTEGER_MAXIMO) {
     problemas.push('Informe um projeto válido.');
+  }
+
+  if (publicacao.areas.some((idArea) => !Number.isInteger(idArea) || idArea < 1 || idArea > POSTGRES_INTEGER_MAXIMO)) {
+    problemas.push('Áreas de conhecimento inválidas.');
   }
 
   validarAutores(publicacao.autores, problemas);
@@ -370,6 +427,10 @@ function tratarConflitoUnicoPublicacao(erro) {
 
   if (erro.code === '23503' && erro.constraint === 'fk_publicacao_projeto') {
     throw new ErroHttp(400, 'Projeto não encontrado.');
+  }
+
+  if (erro.code === '23503' && erro.constraint === 'fk_area_publicacao_area') {
+    throw new ErroHttp(400, 'Área não encontrada.');
   }
 }
 
