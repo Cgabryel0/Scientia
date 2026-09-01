@@ -49,6 +49,8 @@ export function App() {
           <Route path="/painel" element={<Painel />} />
           <Route path="/sem-permissao" element={<SemPermissao />} />
           <Route path="/candidaturas" element={<Candidaturas />} />
+          <Route path="/indicadores" element={<IndicadoresProducoes />} />
+          <Route path="/publicacoes/:id" element={<DetalhePublicacao />} />
 
           <Route element={<RotaProtegida tipos={['pesquisador', 'admin']} />}>
             <Route path="/publicacoes/cadastro" element={<CadastroPublicacao />} />
